@@ -1,0 +1,32 @@
+[build]
+  # Netlify build pipeline:
+  # 1. Install deps
+  # 2. Clone the OpenBible.info geocoding dataset (CC-BY-4.0)
+  # 3. Run the data pipeline (BSB text, locations, journeys)
+  # 4. Build the static React site to dist/
+  command = """
+    git clone --depth 1 https://github.com/openbibleinfo/Bible-Geocoding-Data.git && \
+    npm run data && \
+    npm run build
+  """
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[headers]]
+  # Long-cache for the data JSON files (regenerated on each build)
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, must-revalidate"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# SPA fallback — but we're a multi-route static site, so this is just safety
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

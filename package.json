@@ -1,0 +1,36 @@
+{
+  "name": "acts-platform",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Interactive Acts platform — Know the Word | Trust the Spirit | Preach the Name",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run data && tsc -b && vite build",
+    "preview": "vite preview",
+    "data": "npm run data:bsb && npm run data:locations && npm run data:journeys",
+    "data:bsb": "node scripts/fetch-bsb.mjs",
+    "data:locations": "node scripts/parse-locations.mjs",
+    "data:journeys": "node scripts/build-journeys.mjs",
+    "data:teachings": "node scripts/convert-teachings.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "maplibre-gl": "^4.7.1",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
+    "@turf/turf": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "mammoth": "^1.8.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ──────────────────────────────────────────────────────────── */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream text-ink font-body antialiased;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  /* Smooth scrollbars — match the parchment aesthetic */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { @apply bg-cream-dark; }
+  ::-webkit-scrollbar-thumb { @apply bg-navy-light rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-navy; }
+}
+
+/* ─── Scripture rendering ──────────────────────────────────────────── */
+
+@layer components {
+  .scripture-text {
+    @apply font-scripture text-scripture text-ink leading-relaxed;
+  }
+
+  .verse-number {
+    @apply text-gold-dark text-xs font-bold align-super mr-1 select-none;
+    font-family: 'Calibri', sans-serif;
+  }
+
+  .verse {
+    @apply inline transition-colors duration-200 px-0.5 rounded;
+  }
+  .verse:hover {
+    @apply bg-cream-warm;
+  }
+  .verse.active {
+    @apply bg-gold/20;
+  }
+
+  .verse .words-of-jesus {
+    @apply text-[#A33A2E];   /* muted red, accessible on cream */
+  }
+
+  .footnote-ref {
+    @apply text-gold-dark text-[0.65rem] cursor-help hover:text-navy;
+  }
+
+  .panel-heading {
+    @apply font-heading text-navy text-2xl md:text-3xl border-b-2 border-gold pb-2 mb-4;
+  }
+
+  .chapter-heading {
+    @apply font-heading text-navy text-xl mt-8 mb-3 flex items-baseline gap-2;
+  }
+  .chapter-heading::before {
+    content: '';
+    @apply inline-block w-8 h-px bg-gold-dark mr-1 mb-1;
+  }
+
+  .scripture-heading {
+    @apply font-heading text-navy italic text-base mt-4 mb-2;
+  }
+
+  /* Six-panel navigation */
+  .panel-pill {
+    @apply px-3 py-1.5 rounded-full text-xs font-body font-medium
+           transition-all duration-200 border;
+  }
+  .panel-pill.inactive {
+    @apply bg-cream text-navy/70 border-cream-dark hover:bg-cream-warm hover:text-navy;
+  }
+  .panel-pill.active {
+    @apply bg-navy text-cream border-navy shadow-sm;
+  }
+
+  /* Map container — parchment-tinted aesthetic */
+  .map-wrap {
+    @apply rounded-lg overflow-hidden shadow-md border border-cream-dark;
+  }
+
+  /* Teaching pane callouts (Big Idea, Key Verses, Closing Prayer) */
+  .callout-big-idea {
+    @apply bg-navy text-cream rounded-lg p-4 my-4 font-heading text-lg italic;
+  }
+  .callout-key-verse {
+    @apply bg-gold/15 border-l-4 border-gold rounded-r-md p-3 my-3 italic;
+  }
+  .callout-prayer {
+    @apply bg-cream-warm border border-gold/40 rounded-lg p-4 my-4 italic text-navy;
+  }
+
+  /* MapLibre controls — match design system */
+  .maplibregl-ctrl-group {
+    @apply !bg-cream !border-cream-dark !shadow-md;
+  }
+  .maplibregl-popup-content {
+    @apply !bg-cream !text-ink !font-body !rounded-lg !shadow-xl !border !border-cream-dark;
+    padding: 12px 16px;
+  }
+  .maplibregl-popup-tip {
+    @apply !border-t-cream;
+  }
+}
+
+/* ─── Animations ───────────────────────────────────────────────────── */
+
+@keyframes route-draw {
+  from { stroke-dashoffset: 100%; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes pulse-marker {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.15); }
+}
+
+.marker-pulse {
+  animation: pulse-marker 2s ease-in-out infinite;
+}
