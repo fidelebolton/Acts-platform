@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { ScripturePayload, Panel, VerseBlock } from '../types';
+import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   scripture: ScripturePayload;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function ScripturePane({ scripture, activePanel, activeVerseId, onVerseInView }: Props) {
+  const { t, fmt } = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -62,20 +64,22 @@ export function ScripturePane({ scripture, activePanel, activeVerseId, onVerseIn
   }, [chaptersInPanel, onVerseInView]);
 
   if (!activePanelMeta) {
-    return <div className="p-6 text-navy/60">Panel not found.</div>;
+    return <div className="p-6 text-navy/60">{t.scripture.panelNotFound}</div>;
   }
+
+  const bookLabel = t.scripture.chapterPrefix;
 
   return (
     <div ref={containerRef} className="px-4 md:px-8 py-6 max-w-3xl mx-auto">
       <header className="mb-6">
         <div className="text-xs text-gold-dark uppercase tracking-widest font-bold mb-1">
-          Panel {activePanelMeta.id} of 6
+          {fmt(t.scripture.panelOf, { n: activePanelMeta.id })}
         </div>
         <h2 className="panel-heading">{activePanelMeta.name}</h2>
         <p className="text-sm text-navy/70 italic">
-          Acts {activePanelMeta.startChapter}:{activePanelMeta.startVerse}
+          {bookLabel} {activePanelMeta.startChapter}:{activePanelMeta.startVerse}
           {' — '}
-          Acts {activePanelMeta.endChapter}:{activePanelMeta.endVerse}
+          {bookLabel} {activePanelMeta.endChapter}:{activePanelMeta.endVerse}
         </p>
       </header>
 
@@ -83,6 +87,7 @@ export function ScripturePane({ scripture, activePanel, activeVerseId, onVerseIn
         <ChapterBlock
           key={chapter.number}
           chapter={chapter}
+          bookLabel={bookLabel}
           activeVerseId={activeVerseId}
           panelStart={activePanelMeta.startChapter === chapter.number ? activePanelMeta.startVerse : null}
           panelEnd={activePanelMeta.endChapter === chapter.number ? activePanelMeta.endVerse : null}
@@ -94,16 +99,17 @@ export function ScripturePane({ scripture, activePanel, activeVerseId, onVerseIn
 
 interface ChapterBlockProps {
   chapter: ScripturePayload['chapters'][number];
+  bookLabel: string;
   activeVerseId: string | null;
   panelStart: number | null; // verse where this panel begins in this chapter
   panelEnd: number | null;   // verse where this panel ends in this chapter
 }
 
-function ChapterBlock({ chapter, activeVerseId, panelStart, panelEnd }: ChapterBlockProps) {
+function ChapterBlock({ chapter, bookLabel, activeVerseId, panelStart, panelEnd }: ChapterBlockProps) {
   return (
     <section className="mb-8 animate-fade-in">
       <h3 className="chapter-heading">
-        <span>Acts {chapter.number}</span>
+        <span>{bookLabel} {chapter.number}</span>
       </h3>
 
       <div className="scripture-text">

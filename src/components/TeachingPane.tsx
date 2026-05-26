@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Panel, TeachingEntry } from '../types';
+import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   activePanel: Panel['id'];
 }
 
 export function TeachingPane({ activePanel }: Props) {
+  const { t, fmt } = useT();
   const [teachings, setTeachings] = useState<TeachingEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -30,26 +32,33 @@ export function TeachingPane({ activePanel }: Props) {
   const active = filtered.find(t => t.id === activeId) || filtered[0];
 
   if (error || !teachings) {
+    // Render the comingSoonBody with a `{curriculum}` placeholder, splitting
+    // around the marker so the curriculum name can be rendered as <em>.
+    const body = t.teaching.comingSoonBody;
+    const marker = '{curriculum}';
+    const [bodyBefore, bodyAfter] = body.includes(marker)
+      ? [body.slice(0, body.indexOf(marker)), body.slice(body.indexOf(marker) + marker.length)]
+      : [body, ''];
+
     return (
       <div className="px-6 py-10 max-w-2xl mx-auto">
         <div className="text-xs uppercase tracking-widest text-gold-dark font-bold mb-2">
-          Teaching
+          {t.teaching.section}
         </div>
         <h2 className="font-heading text-2xl text-navy mb-3">
-          Pastoral teaching coming soon
+          {t.teaching.comingSoonTitle}
         </h2>
         <p className="text-sm text-navy/70 mb-4 leading-relaxed">
-          This pane will hold Pastor Fidele Bolton's teaching for each panel of Acts —
-          drawn from PSOS course manuals, the <em>Know the Word | Trust the Spirit</em>{' '}
-          curriculum book, sermons, and articles.
+          {bodyBefore}
+          <em>{t.teaching.curriculumName}</em>
+          {bodyAfter}
         </p>
         <div className="bg-cream-warm border border-cream-dark rounded-lg p-4 text-sm text-navy/80">
-          <div className="font-semibold mb-1">For the builder:</div>
+          <div className="font-semibold mb-1">{t.teaching.forTheBuilder}</div>
           <ol className="list-decimal list-inside space-y-1 text-xs">
-            <li>Drop PSOS Acts 1–12 .docx files into <code className="bg-cream-dark px-1 rounded">/uploads</code></li>
-            <li>Run <code className="bg-cream-dark px-1 rounded">npm run data:teachings</code></li>
-            <li>This pane will populate automatically from{' '}
-              <code className="bg-cream-dark px-1 rounded">/data/teachings/index.json</code></li>
+            <li>{fmtWithCode(fmt, t.teaching.builderStep1, { uploads: '/uploads' })}</li>
+            <li>{fmtWithCode(fmt, t.teaching.builderStep2, { cmd: 'npm run data:teachings' })}</li>
+            <li>{fmtWithCode(fmt, t.teaching.builderStep3, { manifest: '/data/teachings/index.json' })}</li>
           </ol>
         </div>
       </div>
@@ -60,7 +69,7 @@ export function TeachingPane({ activePanel }: Props) {
     return (
       <div className="px-6 py-10 max-w-2xl mx-auto text-center">
         <div className="text-sm text-navy/60 italic">
-          No teaching content yet for this panel.
+          {t.teaching.noContent}
         </div>
       </div>
     );
@@ -92,7 +101,7 @@ export function TeachingPane({ activePanel }: Props) {
         {active && (
           <article>
             <div className="text-xs uppercase tracking-widest text-gold-dark font-bold mb-2">
-              {labelForType(active.type)}
+              {t.teaching.type[active.type]}
             </div>
             <h2 className="font-heading text-2xl md:text-3xl text-navy mb-1">
               {active.title}
@@ -104,7 +113,7 @@ export function TeachingPane({ activePanel }: Props) {
             {active.big_idea && (
               <div className="callout-big-idea">
                 <div className="text-xs uppercase tracking-wider opacity-70 mb-1 not-italic font-body font-bold">
-                  Big Idea
+                  {t.teaching.bigIdea}
                 </div>
                 {active.big_idea}
               </div>
@@ -114,13 +123,13 @@ export function TeachingPane({ activePanel }: Props) {
               <div className="grid md:grid-cols-2 gap-3 my-4">
                 <div className="callout-key-verse">
                   <div className="text-xs uppercase tracking-wider text-navy font-bold not-italic mb-1">
-                    Know the Word
+                    {t.teaching.knowTheWord}
                   </div>
                   {active.key_verses.kw}
                 </div>
                 <div className="callout-key-verse">
                   <div className="text-xs uppercase tracking-wider text-navy font-bold not-italic mb-1">
-                    Trust the Spirit
+                    {t.teaching.trustTheSpirit}
                   </div>
                   {active.key_verses.ts}
                 </div>
@@ -139,12 +148,28 @@ export function TeachingPane({ activePanel }: Props) {
   );
 }
 
-function labelForType(type: TeachingEntry['type']): string {
-  switch (type) {
-    case 'psos-lesson': return 'PSOS Lesson';
-    case 'article':     return 'Teaching Article';
-    case 'sermon':      return 'Sermon';
-    case 'devotional':  return 'Devotional';
-    case 'book-section': return 'From: Know the Word | Trust the Spirit';
-  }
+// Render a builder-help string that contains a single `{placeholder}` token
+// as React children with the placeholder rendered as <code>. Used by the
+// "For the builder" ordered list in the teaching pane's empty state.
+function fmtWithCode(
+  fmt: (s: string, vars?: Record<string, string | number>) => string,
+  template: string,
+  vars: Record<string, string>,
+): ReactNode {
+  const keys = Object.keys(vars);
+  if (keys.length === 0) return fmt(template, vars);
+  const key = keys[0];
+  const marker = `{${key}}`;
+  if (!template.includes(marker)) return fmt(template, vars);
+  const [before, after] = [
+    template.slice(0, template.indexOf(marker)),
+    template.slice(template.indexOf(marker) + marker.length),
+  ];
+  return (
+    <>
+      {before}
+      <code className="bg-cream-dark px-1 rounded">{vars[key]}</code>
+      {after}
+    </>
+  );
 }

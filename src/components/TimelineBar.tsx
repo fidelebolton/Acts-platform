@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { ScripturePayload, Panel } from '../types';
+import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   scripture: ScripturePayload;
@@ -11,25 +12,45 @@ interface Props {
 // Major chronological milestones in Acts. Dates are approximate scholarly
 // consensus dates — most Acts chronologies place the events between
 // AD 30 (Pentecost) and AD 62 (Paul's two-year house arrest in Rome).
-const TIMELINE_EVENTS = [
-  { year: 'AD 30', panel: 1 as const, title: 'Pentecost',                  chapter: 2,  blurb: 'The Spirit is poured out; 3,000 believe.' },
-  { year: 'AD 31', panel: 1 as const, title: 'Stephen martyred',           chapter: 7,  blurb: 'First Christian martyr — the church scatters.' },
-  { year: 'AD 33', panel: 2 as const, title: 'Saul converted',             chapter: 9,  blurb: 'On the road to Damascus.' },
-  { year: 'AD 36', panel: 3 as const, title: 'Cornelius and his household', chapter: 10, blurb: 'The gospel breaks the Jew/Gentile wall.' },
-  { year: 'AD 44', panel: 3 as const, title: 'Herod Agrippa I dies',       chapter: 12, blurb: 'Persecution stops — the word multiplies.' },
-  { year: 'AD 46', panel: 4 as const, title: 'First Journey begins',       chapter: 13, blurb: 'Antioch sends Paul and Barnabas.', journey: 'journey-1' },
-  { year: 'AD 49', panel: 4 as const, title: 'Jerusalem Council',          chapter: 15, blurb: 'Gentiles are saved by grace, not law.' },
-  { year: 'AD 49', panel: 5 as const, title: 'Second Journey begins',      chapter: 15, blurb: 'Paul, Silas, Timothy — Europe opens.', journey: 'journey-2' },
-  { year: 'AD 50', panel: 5 as const, title: 'Macedonian Vision',          chapter: 16, blurb: '"Come over to Macedonia and help us."' },
-  { year: 'AD 51', panel: 5 as const, title: 'Areopagus Sermon',           chapter: 17, blurb: 'The unknown God made known in Athens.' },
-  { year: 'AD 53', panel: 5 as const, title: 'Third Journey begins',       chapter: 18, blurb: 'Ephesus — three years of fruit.', journey: 'journey-3' },
-  { year: 'AD 56', panel: 5 as const, title: 'Riot of the silversmiths',   chapter: 19, blurb: 'Artemis vs. the kingdom of God.' },
-  { year: 'AD 57', panel: 6 as const, title: 'Paul arrested in Jerusalem', chapter: 21, blurb: 'The journey from freedom to chains begins.' },
-  { year: 'AD 59', panel: 6 as const, title: 'Voyage to Rome',             chapter: 27, blurb: 'Storm, shipwreck, Malta.', journey: 'journey-4' },
-  { year: 'AD 60', panel: 6 as const, title: 'Rome — house arrest',        chapter: 28, blurb: '"Preaching the kingdom… unhindered."' },
+//
+// The `id` field keys into `t.timeline.events.<id>` for the human-readable
+// title and blurb — translations live in src/i18n/en.json and src/i18n/rw.json,
+// not in this file. To add a new language, add the keyed entries in that
+// language's JSON file; no code change here is needed.
+type TimelineEventKey =
+  | 'pentecost' | 'stephen-martyred' | 'saul-converted' | 'cornelius'
+  | 'herod-dies' | 'first-journey' | 'jerusalem-council' | 'second-journey'
+  | 'macedonian-vision' | 'areopagus-sermon' | 'third-journey'
+  | 'silversmiths-riot' | 'paul-arrested' | 'voyage-to-rome' | 'house-arrest';
+
+interface TimelineMeta {
+  id: TimelineEventKey;
+  year: string;
+  panel: Panel['id'];
+  chapter: number;
+  journey?: string;
+}
+
+const TIMELINE_EVENTS: TimelineMeta[] = [
+  { id: 'pentecost',          year: 'AD 30', panel: 1, chapter: 2 },
+  { id: 'stephen-martyred',   year: 'AD 31', panel: 1, chapter: 7 },
+  { id: 'saul-converted',     year: 'AD 33', panel: 2, chapter: 9 },
+  { id: 'cornelius',          year: 'AD 36', panel: 3, chapter: 10 },
+  { id: 'herod-dies',         year: 'AD 44', panel: 3, chapter: 12 },
+  { id: 'first-journey',      year: 'AD 46', panel: 4, chapter: 13, journey: 'journey-1' },
+  { id: 'jerusalem-council',  year: 'AD 49', panel: 4, chapter: 15 },
+  { id: 'second-journey',     year: 'AD 49', panel: 5, chapter: 15, journey: 'journey-2' },
+  { id: 'macedonian-vision',  year: 'AD 50', panel: 5, chapter: 16 },
+  { id: 'areopagus-sermon',   year: 'AD 51', panel: 5, chapter: 17 },
+  { id: 'third-journey',      year: 'AD 53', panel: 5, chapter: 18, journey: 'journey-3' },
+  { id: 'silversmiths-riot',  year: 'AD 56', panel: 5, chapter: 19 },
+  { id: 'paul-arrested',      year: 'AD 57', panel: 6, chapter: 21 },
+  { id: 'voyage-to-rome',     year: 'AD 59', panel: 6, chapter: 27, journey: 'journey-4' },
+  { id: 'house-arrest',       year: 'AD 60', panel: 6, chapter: 28 },
 ];
 
 export function TimelineBar({ activePanel, onPanelSelect, onJourneySelect }: Props) {
+  const { t } = useT();
   const events = TIMELINE_EVENTS;
 
   // Compute position of each event along the bar (0–100%)
@@ -50,10 +71,10 @@ export function TimelineBar({ activePanel, onPanelSelect, onJourneySelect }: Pro
       <div className="px-4 md:px-8 py-2">
         <div className="flex items-center justify-between mb-1">
           <div className="text-[10px] uppercase tracking-widest text-navy/60 font-bold">
-            Chronology · AD 30 → AD 62
+            {t.timeline.header}
           </div>
           <div className="text-[10px] text-navy/50 italic">
-            Click any event to jump there
+            {t.timeline.hint}
           </div>
         </div>
 
@@ -70,6 +91,10 @@ export function TimelineBar({ activePanel, onPanelSelect, onJourneySelect }: Pro
           {/* Events */}
           {positioned.map((e, i) => {
             const isActive = e.panel === activePanel;
+            const meta = t.timeline.events[e.id];
+            const title = meta?.title ?? e.id;
+            const blurb = meta?.blurb ?? '';
+            const chapterLabel = `${t.scripture.chapterPrefix} ${e.chapter}`;
             return (
               <button
                 key={i}
@@ -79,7 +104,7 @@ export function TimelineBar({ activePanel, onPanelSelect, onJourneySelect }: Pro
                 }}
                 className="absolute top-0 -translate-x-1/2 group"
                 style={{ left: `${e.pct}%` }}
-                title={`${e.year} — ${e.title}: ${e.blurb}`}
+                title={`${e.year} — ${title}: ${blurb}`}
               >
                 <div
                   className={`w-2.5 h-2.5 rounded-full mx-auto mt-6 transition-all ${
@@ -92,7 +117,7 @@ export function TimelineBar({ activePanel, onPanelSelect, onJourneySelect }: Pro
                   {e.year}
                 </div>
                 <div className="absolute left-1/2 -translate-x-1/2 top-12 z-20 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-navy text-cream text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                  <span className="font-semibold">{e.title}</span> · Acts {e.chapter}
+                  <span className="font-semibold">{title}</span> · {chapterLabel}
                 </div>
               </button>
             );

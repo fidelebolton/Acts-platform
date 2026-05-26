@@ -1,4 +1,5 @@
 import type { Panel } from '../types';
+import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   panels: Panel[];
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function PanelNav({ panels, activePanel, onSelect }: Props) {
+  const { t } = useT();
   return (
     <nav className="px-4 md:px-8 pb-3 flex gap-2 overflow-x-auto" aria-label="Six-panel navigation">
       {panels.map(p => {
@@ -17,7 +19,7 @@ export function PanelNav({ panels, activePanel, onSelect }: Props) {
             onClick={() => onSelect(p.id)}
             className={`panel-pill ${isActive ? 'active' : 'inactive'} whitespace-nowrap`}
             aria-pressed={isActive}
-            title={`${p.name} — Acts ${p.startChapter}:${p.startVerse}–${p.endChapter}:${p.endVerse}`}
+            title={`${p.name} — ${t.scripture.chapterPrefix} ${p.startChapter}:${p.startVerse}–${p.endChapter}:${p.endVerse}`}
           >
             <span className="font-bold mr-1.5 opacity-70">{p.id}</span>
             {p.name}

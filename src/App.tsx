@@ -10,6 +10,7 @@ import { ScripturePane } from './components/ScripturePane';
 import { MapPane } from './components/MapPane';
 import { TeachingPane } from './components/TeachingPane';
 import { TimelineBar } from './components/TimelineBar';
+import { useT, DICTIONARIES, type LangCode } from './i18n/LanguageContext';
 
 type LoadState =
   | { status: 'loading' }
@@ -21,11 +22,17 @@ type LoadState =
     };
 
 export default function App() {
+  const { t, lang, setLang, panelName } = useT();
   const [data, setData] = useState<LoadState>({ status: 'loading' });
   const [activePanel, setActivePanel] = useState<Panel['id']>(1);
   const [activeVerseId, setActiveVerseId] = useState<string | null>(null);
   const [showTeaching, setShowTeaching] = useState(true);
   const [activeJourney, setActiveJourney] = useState<string | null>(null);
+
+  // Keep the browser tab title in the active language.
+  useEffect(() => {
+    document.title = `${t.app.title} — Pastor Fidele Bolton`;
+  }, [t]);
 
   useEffect(() => {
     Promise.all([
@@ -62,8 +69,8 @@ export default function App() {
   if (data.status === 'loading') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-cream gap-4">
-        <div className="font-heading text-3xl text-navy">The Book of Acts</div>
-        <div className="text-navy/60 text-sm">Loading scripture, locations, journeys…</div>
+        <div className="font-heading text-3xl text-navy">{t.app.title}</div>
+        <div className="text-navy/60 text-sm">{t.app.loading}</div>
         <div className="w-32 h-1 bg-cream-dark rounded overflow-hidden">
           <div className="h-full bg-gold animate-pulse w-full" />
         </div>
@@ -72,19 +79,37 @@ export default function App() {
   }
 
   if (data.status === 'error') {
+    // The errorHelp string contains a `{cmd}` placeholder — render it as
+    // a styled <code> element instead of plain text.
+    const tmpl = t.app.errorHelp;
+    const marker = '{cmd}';
+    const i = tmpl.indexOf(marker);
+    const [helpBefore, helpAfter] = i >= 0
+      ? [tmpl.slice(0, i), tmpl.slice(i + marker.length)]
+      : [tmpl, ''];
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <div className="font-heading text-2xl text-navy mb-2">Couldn't load the data</div>
+        <div className="font-heading text-2xl text-navy mb-2">{t.app.errorTitle}</div>
         <div className="text-sm text-navy/70 mb-4 max-w-md">{data.message}</div>
         <div className="text-xs text-navy/50 max-w-md">
-          Run <code className="bg-cream-dark px-1 rounded">npm run data</code> locally,
-          or check that the Netlify build completed successfully.
+          {helpBefore}
+          <code className="bg-cream-dark px-1 rounded">npm run data</code>
+          {helpAfter}
         </div>
       </div>
     );
   }
 
   const { scripture, locations, journeys } = data;
+
+  // Build a panel list with translated names while keeping the original
+  // verse-range metadata from bsb-acts.json. Panel names are looked up by
+  // id so adding a new language only requires editing the i18n JSON files.
+  const translatedPanels: Panel[] = scripture.panels.map(p => ({
+    ...p,
+    name: panelName(p.id, p.name),
+  }));
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
@@ -93,19 +118,40 @@ export default function App() {
         <div className="px-4 md:px-8 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="font-heading text-2xl md:text-3xl text-navy leading-tight">
-              The Book of Acts
+              {t.app.title}
             </h1>
             <p className="text-xs md:text-sm text-navy/70 italic">
-              Know the Word · Trust the Spirit · Preach the Name
+              {t.app.tagline}
             </p>
           </div>
-          <div className="text-right text-xs text-navy/60">
-            <div>Pastor Fidele Bolton</div>
-            <a href="https://fidelebolton.com" className="text-gold-dark hover:text-navy">fidelebolton.com</a>
+
+          <div className="flex items-center gap-4">
+            {/* Language selector */}
+            <label className="flex items-center gap-1.5 text-xs text-navy/70">
+              <span className="sr-only">{t.app.languageLabel}</span>
+              <span aria-hidden="true" className="text-base">🌐</span>
+              <select
+                value={lang}
+                onChange={e => setLang(e.target.value as LangCode)}
+                aria-label={t.app.languageLabel}
+                className="bg-cream border border-cream-dark rounded px-1.5 py-0.5 text-xs text-navy font-body cursor-pointer hover:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
+              >
+                {(Object.keys(DICTIONARIES) as LangCode[]).map(code => (
+                  <option key={code} value={code}>
+                    {DICTIONARIES[code].lang.nativeName}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="text-right text-xs text-navy/60">
+              <div>Pastor Fidele Bolton</div>
+              <a href="https://fidelebolton.com" className="text-gold-dark hover:text-navy">fidelebolton.com</a>
+            </div>
           </div>
         </div>
         <PanelNav
-          panels={scripture.panels}
+          panels={translatedPanels}
           activePanel={activePanel}
           onSelect={setActivePanel}
         />
@@ -120,19 +166,19 @@ export default function App() {
               onClick={() => setShowTeaching(false)}
               className={`flex-1 py-2 text-sm font-body transition-colors ${!showTeaching ? 'bg-cream text-navy font-semibold' : 'text-navy/60 hover:bg-cream/50'}`}
             >
-              Scripture
+              {t.tabs.scripture}
             </button>
             <button
               onClick={() => setShowTeaching(true)}
               className={`flex-1 py-2 text-sm font-body transition-colors ${showTeaching ? 'bg-cream text-navy font-semibold' : 'text-navy/60 hover:bg-cream/50'}`}
             >
-              Teaching
+              {t.tabs.teaching}
             </button>
           </div>
           <div className="flex-1 overflow-y-auto">
             {!showTeaching ? (
               <ScripturePane
-                scripture={scripture}
+                scripture={{ ...scripture, panels: translatedPanels }}
                 activePanel={activePanel}
                 activeVerseId={activeVerseId}
                 onVerseInView={handleVerseInView}
@@ -166,10 +212,10 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-cream-dark bg-cream-warm/80 py-3 px-4 text-xs text-navy/60 flex flex-wrap items-center justify-between gap-2">
         <div>
-          Scripture: {scripture.translation.name} ({scripture.translation.shortName}) · public domain
+          {t.app.scriptureCredit}: {scripture.translation.name} ({scripture.translation.shortName}) · {t.app.publicDomain}
         </div>
         <div>
-          Locations: {locations.attribution}
+          {t.app.locationsCredit}: {locations.attribution}
         </div>
         <div>
           Potter's Wheel Church · <a href="https://potterswheelchurch.com" className="text-gold-dark hover:text-navy">potterswheelchurch.com</a>

@@ -1,0 +1,95 @@
+{
+  "lang": {
+    "code": "en",
+    "name": "English",
+    "nativeName": "English"
+  },
+  "app": {
+    "title": "The Book of Acts",
+    "tagline": "Know the Word · Trust the Spirit · Preach the Name",
+    "loading": "Loading scripture, locations, journeys…",
+    "errorTitle": "Couldn't load the data",
+    "errorHelp": "Run {cmd} locally, or check that the Netlify build completed successfully.",
+    "languageLabel": "Language",
+    "scriptureCredit": "Scripture",
+    "locationsCredit": "Locations",
+    "publicDomain": "public domain"
+  },
+  "tabs": {
+    "scripture": "Scripture",
+    "teaching": "Teaching"
+  },
+  "panels": {
+    "1": "Jerusalem",
+    "2": "Judea and Samaria",
+    "3": "To the Gentiles",
+    "4": "Asia Minor",
+    "5": "Europe",
+    "6": "Rome — to the Ends of the Earth"
+  },
+  "scripture": {
+    "panelOf": "Panel {n} of 6",
+    "chapterPrefix": "Acts",
+    "panelNotFound": "Panel not found."
+  },
+  "map": {
+    "legendHeader": "Paul's Journeys",
+    "allLocations": "All locations",
+    "popupToday": "Today",
+    "popupAppearsIn": "Appears in Acts",
+    "popupStopOf": "Stop {n} of {total}"
+  },
+  "journeys": {
+    "movement-jerusalem": "Jerusalem and the Early Church",
+    "movement-philip": "Philip and the Scattered Church",
+    "movement-saul": "Saul's Conversion",
+    "movement-peter": "Peter to the Gentiles",
+    "movement-antioch": "Antioch and Herod",
+    "journey-1": "First Missionary Journey",
+    "journey-2": "Second Missionary Journey",
+    "journey-3": "Third Missionary Journey",
+    "journey-4": "Voyage to Rome"
+  },
+  "teaching": {
+    "section": "Teaching",
+    "comingSoonTitle": "Pastoral teaching coming soon",
+    "comingSoonBody": "This pane will hold Pastor Fidele Bolton's teaching for each panel of Acts — drawn from PSOS course manuals, the {curriculum} curriculum book, sermons, and articles.",
+    "curriculumName": "Know the Word | Trust the Spirit",
+    "forTheBuilder": "For the builder:",
+    "builderStep1": "Drop PSOS Acts 1–12 .docx files into {uploads}",
+    "builderStep2": "Run {cmd}",
+    "builderStep3": "This pane will populate automatically from {manifest}",
+    "noContent": "No teaching content yet for this panel.",
+    "bigIdea": "Big Idea",
+    "knowTheWord": "Know the Word",
+    "trustTheSpirit": "Trust the Spirit",
+    "type": {
+      "psos-lesson": "PSOS Lesson",
+      "article": "Teaching Article",
+      "sermon": "Sermon",
+      "devotional": "Devotional",
+      "book-section": "From: Know the Word | Trust the Spirit"
+    }
+  },
+  "timeline": {
+    "header": "Chronology · AD 30 → AD 62",
+    "hint": "Click any event to jump there",
+    "events": {
+      "pentecost":          { "title": "Pentecost",                  "blurb": "The Spirit is poured out; 3,000 believe." },
+      "stephen-martyred":   { "title": "Stephen martyred",           "blurb": "First Christian martyr — the church scatters." },
+      "saul-converted":     { "title": "Saul converted",             "blurb": "On the road to Damascus." },
+      "cornelius":          { "title": "Cornelius and his household", "blurb": "The gospel breaks the Jew/Gentile wall." },
+      "herod-dies":         { "title": "Herod Agrippa I dies",       "blurb": "Persecution stops — the word multiplies." },
+      "first-journey":      { "title": "First Journey begins",       "blurb": "Antioch sends Paul and Barnabas." },
+      "jerusalem-council":  { "title": "Jerusalem Council",          "blurb": "Gentiles are saved by grace, not law." },
+      "second-journey":     { "title": "Second Journey begins",      "blurb": "Paul, Silas, Timothy — Europe opens." },
+      "macedonian-vision":  { "title": "Macedonian Vision",          "blurb": "\"Come over to Macedonia and help us.\"" },
+      "areopagus-sermon":   { "title": "Areopagus Sermon",           "blurb": "The unknown God made known in Athens." },
+      "third-journey":      { "title": "Third Journey begins",       "blurb": "Ephesus — three years of fruit." },
+      "silversmiths-riot":  { "title": "Riot of the silversmiths",   "blurb": "Artemis vs. the kingdom of God." },
+      "paul-arrested":      { "title": "Paul arrested in Jerusalem", "blurb": "The journey from freedom to chains begins." },
+      "voyage-to-rome":     { "title": "Voyage to Rome",             "blurb": "Storm, shipwreck, Malta." },
+      "house-arrest":       { "title": "Rome — house arrest",        "blurb": "\"Preaching the kingdom… unhindered.\"" }
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import maplibregl, { Map as MapLibreMap, Popup } from 'maplibre-gl';
 import * as turf from '@turf/turf';
 import type { ActsLocation, JourneysCollection, Panel, RouteFeature } from '../types';
+import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   locations: ActsLocation[];
@@ -15,10 +16,21 @@ interface Props {
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
 export function MapPane({ locations, journeys, activeJourney, onJourneySelect, activePanel }: Props) {
+  const { t, fmt, journeyName } = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const popupRef = useRef<Popup | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  // MapLibre click handlers are registered once and capture their closure.
+  // Mirror the latest i18n strings into refs so popup HTML always renders
+  // in the currently-selected language (even after the user switches).
+  const tRef = useRef(t);
+  const fmtRef = useRef(fmt);
+  useEffect(() => {
+    tRef.current = t;
+    fmtRef.current = fmt;
+  }, [t, fmt]);
 
   // Init map once
   useEffect(() => {
@@ -109,18 +121,20 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
         },
       });
 
-      // Popup on click
+      // Popup on click. Reads i18n strings from refs so the popup is
+      // always in the currently-selected language.
       map.on('click', 'locations-circles', e => {
         const feat = e.features?.[0];
         if (!feat) return;
         const p = feat.properties as Record<string, string>;
+        const tt = tRef.current;
         popupRef.current?.remove();
         popupRef.current = new maplibregl.Popup({ offset: 12, closeButton: true })
           .setLngLat((feat.geometry as GeoJSON.Point).coordinates as [number, number])
           .setHTML(`
             <div class="font-heading text-base text-navy font-semibold">${escapeHtml(p.ancient_name)}</div>
-            <div class="text-xs text-navy/70 mb-1">Today: <strong>${escapeHtml(p.modern_name || '?')}</strong> · ${escapeHtml(p.modern_country || '')}</div>
-            <div class="text-xs text-navy/60">Appears in Acts ${escapeHtml(p.chapters)}</div>
+            <div class="text-xs text-navy/70 mb-1">${escapeHtml(tt.map.popupToday)}: <strong>${escapeHtml(p.modern_name || '?')}</strong> · ${escapeHtml(p.modern_country || '')}</div>
+            <div class="text-xs text-navy/60">${escapeHtml(tt.map.popupAppearsIn)} ${escapeHtml(p.chapters)}</div>
           `)
           .addTo(map);
       });
@@ -187,15 +201,22 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
         const feat = e.features?.[0];
         if (!feat) return;
         const p = feat.properties as Record<string, string>;
+        const tt = tRef.current;
+        const ff = fmtRef.current;
+        // Look up the translated journey name (falls back to the data value).
+        const localizedJourney = (tt.journeys as Record<string, string>)[p.journey_id] ?? p.journey_name;
+        // Stop name, acts_ref, and notes come from journeys.geojson. They
+        // are authored in English; when a Kinyarwanda BSB/journey dataset
+        // exists, regenerate journeys.geojson and these will follow.
         popupRef.current?.remove();
         popupRef.current = new maplibregl.Popup({ offset: 12 })
           .setLngLat((feat.geometry as GeoJSON.Point).coordinates as [number, number])
           .setHTML(`
             <div class="text-xs uppercase tracking-wider font-bold" style="color:${p.color}">
-              Stop ${escapeHtml(p.sequence)} of ${escapeHtml(p.total_stops)}
+              ${escapeHtml(ff(tt.map.popupStopOf, { n: p.sequence, total: p.total_stops }))}
             </div>
             <div class="font-heading text-base text-navy font-semibold">${escapeHtml(p.name)}</div>
-            <div class="text-xs text-navy/70 italic">${escapeHtml(p.journey_name)}</div>
+            <div class="text-xs text-navy/70 italic">${escapeHtml(localizedJourney)}</div>
             <div class="text-xs text-navy mt-1">${escapeHtml(p.acts_ref)}</div>
             <div class="text-xs text-navy/80 mt-1 max-w-[260px]">${escapeHtml(p.notes)}</div>
           `)
@@ -282,14 +303,14 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
       {/* Journey selector overlay */}
       <div className="absolute top-3 left-3 z-10 bg-cream-warm/95 backdrop-blur rounded-lg shadow-md border border-cream-dark p-2 max-w-[240px]">
         <div className="text-[10px] uppercase tracking-widest text-navy/60 font-bold mb-1.5 px-1">
-          Paul's Journeys
+          {t.map.legendHeader}
         </div>
         <div className="flex flex-col gap-1">
           <button
             onClick={() => onJourneySelect(null)}
             className={`text-left text-xs px-2 py-1 rounded transition-colors ${activeJourney === null ? 'bg-navy text-cream' : 'text-navy/80 hover:bg-cream-dark'}`}
           >
-            All locations
+            {t.map.allLocations}
           </button>
           {routeFeatures.map(r => (
             <button
@@ -298,7 +319,7 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
               className={`text-left text-xs px-2 py-1 rounded transition-colors flex items-center gap-2 ${activeJourney === r.properties.journey_id ? 'bg-navy text-cream' : 'text-navy/80 hover:bg-cream-dark'}`}
             >
               <span className="w-2 h-2 rounded-full" style={{ background: r.properties.color }} />
-              <span className="truncate">{r.properties.name}</span>
+              <span className="truncate">{journeyName(r.properties.journey_id, r.properties.name)}</span>
               <span className="text-[10px] opacity-60 ml-auto">{r.properties.period}</span>
             </button>
           ))}

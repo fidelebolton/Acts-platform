@@ -1,0 +1,95 @@
+{
+  "lang": {
+    "code": "rw",
+    "name": "Kinyarwanda",
+    "nativeName": "Ikinyarwanda"
+  },
+  "app": {
+    "title": "Igitabo cy'Ibyakozwe n'Intumwa",
+    "tagline": "Menya Ijambo · Wiringire Umwuka · Bwiriza Izina",
+    "loading": "Birapakira ibyanditswe, ahantu, n'ingendo…",
+    "errorTitle": "Ntibyashobotse gushyiraho amakuru",
+    "errorHelp": "Koresha {cmd} kuri mudasobwa yawe, cyangwa urebe ko Netlify yashoboye kubaka.",
+    "languageLabel": "Ururimi",
+    "scriptureCredit": "Ibyanditswe",
+    "locationsCredit": "Ahantu",
+    "publicDomain": "ni ibya rubanda"
+  },
+  "tabs": {
+    "scripture": "Ibyanditswe",
+    "teaching": "Inyigisho"
+  },
+  "panels": {
+    "1": "Yerusalemu",
+    "2": "Yudaya na Samariya",
+    "3": "Ku Banyamahanga",
+    "4": "Aziya Nto",
+    "5": "Uburayi",
+    "6": "Roma — kugera ku mpera z'isi"
+  },
+  "scripture": {
+    "panelOf": "Igice cya {n} kuri 6",
+    "chapterPrefix": "Ibyakozwe n'Intumwa",
+    "panelNotFound": "Igice nticyaboneka."
+  },
+  "map": {
+    "legendHeader": "Ingendo za Pawulo",
+    "allLocations": "Ahantu hose",
+    "popupToday": "Ubu",
+    "popupAppearsIn": "Bigaragara mu Byakozwe",
+    "popupStopOf": "Aho bahagaze ha {n} kuri {total}"
+  },
+  "journeys": {
+    "movement-jerusalem": "Yerusalemu n'Itorero rya mbere",
+    "movement-philip": "Filipo n'Itorero ryatatanye",
+    "movement-saul": "Guhinduka kwa Sawuli",
+    "movement-peter": "Petero ajya ku Banyamahanga",
+    "movement-antioch": "Antiyokiya na Herode",
+    "journey-1": "Urugendo rwa mbere rw'ubumisiyoneri",
+    "journey-2": "Urugendo rwa kabiri rw'ubumisiyoneri",
+    "journey-3": "Urugendo rwa gatatu rw'ubumisiyoneri",
+    "journey-4": "Urugendo rwo mu bwato ajya i Roma"
+  },
+  "teaching": {
+    "section": "Inyigisho",
+    "comingSoonTitle": "Inyigisho z'ubushumba ziraza vuba",
+    "comingSoonBody": "Iki gice kizaba kirimo inyigisho za Pasitori Fidele Bolton za buri gice cy'Ibyakozwe n'Intumwa — zikomoka mu nyandiko za PSOS, igitabo cy'amasomo {curriculum}, inyigisho, n'inkuru.",
+    "curriculumName": "Menya Ijambo | Wiringire Umwuka",
+    "forTheBuilder": "Ku mukoresha:",
+    "builderStep1": "Shyira amadosiye .docx ya PSOS Ibyakozwe 1–12 muri {uploads}",
+    "builderStep2": "Koresha {cmd}",
+    "builderStep3": "Iki gice kizuzuzwa kivuye kuri {manifest}",
+    "noContent": "Nta nyigisho zirahari muri iki gice.",
+    "bigIdea": "Igitekerezo Cy'ingenzi",
+    "knowTheWord": "Menya Ijambo",
+    "trustTheSpirit": "Wiringire Umwuka",
+    "type": {
+      "psos-lesson": "Isomo rya PSOS",
+      "article": "Inyandiko y'inyigisho",
+      "sermon": "Inyigisho",
+      "devotional": "Igitekerezo cya buri munsi",
+      "book-section": "Bikomoka kuri: Menya Ijambo | Wiringire Umwuka"
+    }
+  },
+  "timeline": {
+    "header": "Imyaka · AD 30 → AD 62",
+    "hint": "Kanda kuri buri gikorwa ujye aho",
+    "events": {
+      "pentecost":          { "title": "Pentekositi",                       "blurb": "Umwuka arasukwa; abantu 3.000 baremera." },
+      "stephen-martyred":   { "title": "Stefano apfira ukwemera",           "blurb": "Umumartira wa mbere — Itorero ritatana." },
+      "saul-converted":     { "title": "Sawuli arahindurwa",                "blurb": "Mu nzira ya Damasiko." },
+      "cornelius":          { "title": "Kornelio n'urugo rwe",              "blurb": "Ubutumwa busenya urukuta hagati y'Abayahudi n'Abanyamahanga." },
+      "herod-dies":         { "title": "Herode Agripa wa I arapfa",         "blurb": "Iyicwa rirahagarara — ijambo ririyongera." },
+      "first-journey":      { "title": "Urugendo rwa mbere rutangira",     "blurb": "Antiyokiya yohereje Pawulo na Barinaba." },
+      "jerusalem-council":  { "title": "Inama ya Yerusalemu",               "blurb": "Abanyamahanga bakizwa n'ubuntu, atari amategeko." },
+      "second-journey":     { "title": "Urugendo rwa kabiri rutangira",    "blurb": "Pawulo, Sila, Timoteyo — Uburayi burafungurwa." },
+      "macedonian-vision":  { "title": "Iyerekwa rya Makedoniya",           "blurb": "\"Ngwino i Makedoniya udufashe.\"" },
+      "areopagus-sermon":   { "title": "Inyigisho ya Aleopago",             "blurb": "Imana itazwi imenyekanishwa i Atene." },
+      "third-journey":      { "title": "Urugendo rwa gatatu rutangira",    "blurb": "Efeso — imyaka itatu y'imbuto." },
+      "silversmiths-riot":  { "title": "Imvururu z'abacuzi b'ifeza",       "blurb": "Aritemi na Ubwami bw'Imana." },
+      "paul-arrested":      { "title": "Pawulo afatirwa i Yerusalemu",     "blurb": "Urugendo ruva mu bwisanzure rujya mu minyururu." },
+      "voyage-to-rome":     { "title": "Urugendo rwo mu bwato ajya i Roma","blurb": "Inkubi, ubwato bwaracitse, Malta." },
+      "house-arrest":       { "title": "Roma — kuboshwa mu rugo",          "blurb": "\"Akabwiriza ubwami… nta nkomyi.\"" }
+    }
+  }
+}

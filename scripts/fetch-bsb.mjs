@@ -33,10 +33,38 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = resolve(__dirname, '../public/data/bsb-acts.json');
 
-const API_BASE = 'https://bible.helloao.org/api/BSB/ACT';
+// ─── Scripture translation source ─────────────────────────────────────
+// The site currently fetches the public-domain Berean Standard Bible.
+//
+// TODO: Add a Kinyarwanda Acts feed.
+//   1. Check HelloAO's available translations for a Kinyarwanda Acts:
+//        https://bible.helloao.org/api/available_translations.json
+//      (look for language code "kin" / "rw" — common Rwandan Bible is
+//      *Bibiliya Yera*; confirm with Pastor Fidele which translation
+//      he wants to use). If found, swap BSB for that translation id.
+//   2. If HelloAO doesn't have Kinyarwanda Acts, alternatives:
+//        - YouVersion API (requires key; many Kinyarwanda translations)
+//        - STEPBible open data
+//        - Manual import of an approved public-domain Kinyarwanda
+//          Acts text via a separate fetch step.
+//   3. To support BOTH English and Kinyarwanda Scripture simultaneously,
+//      output two files (bsb-acts.en.json + bsb-acts.rw.json) keyed by
+//      language, and let App.tsx fetch the file matching the active
+//      language from LanguageContext.
+//
+// The UI chrome (panel names, chapter labels, references, tabs, legend,
+// timeline) is already translated via src/i18n/{en,rw}.json — only the
+// Scripture verses + BSB-supplied section headings ("Prologue", "The
+// Ascension", etc.) are still English when Kinyarwanda is selected.
+const TRANSLATION_ID = process.env.BIBLE_TRANSLATION || 'BSB';
+const API_BASE = `https://bible.helloao.org/api/${TRANSLATION_ID}/ACT`;
 
 // Six-panel structure from the research document.
 // Each entry: [chapter, verse] start, [chapter, verse] end, panel id, panel name.
+//
+// Panel `name` values here are English. The frontend overlays translated
+// panel names at render time using `t.panels.{id}` from src/i18n/{en,rw}.json,
+// so changing this list affects data shape only — translations live in JSON.
 const PANELS = [
   { id: 1, name: 'Jerusalem',                 start: [1, 1],   end: [6, 7]   },
   { id: 2, name: 'Judea and Samaria',         start: [6, 8],   end: [9, 31]  },
