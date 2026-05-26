@@ -2,19 +2,31 @@
 /**
  * build-journeys.mjs
  *
- * Builds a GeoJSON FeatureCollection of Paul's four journeys:
- *   1. First Missionary Journey  (Acts 13–14,  AD 46–49)
- *   2. Second Missionary Journey (Acts 15:36–18:22, AD 49–52)
- *   3. Third Missionary Journey  (Acts 18:23–21:17, AD 53–58)
- *   4. Voyage to Rome            (Acts 27:1–28:31, AD 59–60)
+ * Builds a GeoJSON FeatureCollection covering the full geographic
+ * narrative of Acts 1–28 — early-church movements + Paul's four journeys:
  *
- * Each journey is emitted as:
- *   - One LineString feature (the route, in travel order)
+ *   Movements (Acts 1–12, the foundational years):
+ *     1. Jerusalem and the Early Church     (Acts 1–7,           AD 30–35)
+ *     2. Philip and the Scattered Church    (Acts 8,             AD 35)
+ *     3. Saul's Conversion                  (Acts 9 + Gal 1:17,  AD 35–c.46)
+ *     4. Peter to the Gentiles              (Acts 9:32–10:48,    AD 38–41)
+ *     5. Antioch and Herod                  (Acts 11–12,         AD 41–47)
+ *
+ *   Paul's journeys (Acts 13–28, the missionary expansion):
+ *     6. First Missionary Journey           (Acts 13–14,         AD 46–49)
+ *     7. Second Missionary Journey          (Acts 15:36–18:22,   AD 49–52)
+ *     8. Third Missionary Journey           (Acts 18:23–21:17,   AD 53–58)
+ *     9. Voyage to Rome                     (Acts 27:1–28:31,    AD 59–60)
+ *
+ * Each entry is emitted as:
+ *   - One LineString feature (the route, in narrative order)
  *   - One Point feature per stop (with Acts references and pastoral notes)
  *
- * Coordinates were validated against OpenBible.info modern equivalents
- * earlier in the build pipeline. Stops use the canonical modern
- * coordinates we extracted from locations.json where available.
+ * For Acts 1–7 the "route" runs between sub-Jerusalem teaching sites
+ * (Mount of Olives, Upper Room, Solomon's Portico, Beautiful Gate,
+ * Sanhedrin chambers, Akeldama). All other stops are at the canonical
+ * modern coordinates of each ancient city, cross-checked against the
+ * OpenBible.info dataset emitted by parse-locations.mjs.
  */
 
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
@@ -28,6 +40,90 @@ const LOC_PATH = resolve(__dirname, '../public/data/locations.json');
 // Each waypoint: [ancient_name, lon, lat, acts_ref, notes]
 // Coordinates correspond to the modern equivalent of each ancient location.
 const JOURNEYS = [
+  {
+    id: 'movement-jerusalem',
+    name: 'Jerusalem and the Early Church',
+    period: 'AD 30–35',
+    acts_range: 'Acts 1–7',
+    color: '#3D6B7A', // slate teal — foundational waters of Pentecost
+    narrative: 'Before the church moves out, it must wait in. Power for mission comes from intimacy with the Father. Pentecost falls on a praying community, and a Spirit-filled witness rises in the very Temple courts where Jesus was condemned.',
+    stops: [
+      ['Mount of Olives',    35.2453, 31.7794, 'Acts 1:9–12',  'Jesus ascends from this hill; the apostles return to Jerusalem waiting for the promised Spirit.'],
+      ['Upper Room',         35.2294, 31.7717, 'Acts 1:13–2:4', 'One hundred twenty in one accord; tongues of fire fall — the church is born in prayer and power.'],
+      ['Solomon\'s Portico', 35.2370, 31.7780, 'Acts 3:11; 5:12', 'Daily teaching ground in the Temple — bold witness "with one accord" in the very courts where Jesus walked.'],
+      ['Beautiful Gate',     35.2380, 31.7782, 'Acts 3:1–10',  'Peter and John heal the lame man; the Name of Jesus opens what no silver could.'],
+      ['Sanhedrin Council',  35.2346, 31.7779, 'Acts 4:5–22; 5:27–40', 'Twice before the council: "We cannot but speak of what we have seen and heard."'],
+      ['Akeldama',           35.2329, 31.7684, 'Acts 1:18–19', 'The field bought with Judas\'s silver — a sobering reminder that betrayal has a place, and Christ still builds his church.'],
+    ],
+  },
+  {
+    id: 'movement-philip',
+    name: 'Philip and the Scattered Church',
+    period: 'AD 35',
+    acts_range: 'Acts 8',
+    color: '#5A9FB8', // sky blue — Spirit-driven wind
+    narrative: 'Persecution scatters what worship gathered. What enemies intend for ruin, God uses for mission — Philip preaches Christ in Samaria, then runs alongside a chariot on a desert road, and the gospel begins to cross the borders Jesus named in Acts 1:8.',
+    stops: [
+      ['Jerusalem',     35.2342, 31.7777, 'Acts 8:1–4',   'Saul ravages the church; the believers are scattered — and as they go, they preach the word.'],
+      ['Samaria',       35.1893, 32.2767, 'Acts 8:5–25',  'Philip proclaims Christ; the city receives the word with great joy; Peter and John lay hands and the Spirit falls.'],
+      ['Gaza Road',     34.9333, 31.5667, 'Acts 8:26–38', 'An angel sends Philip south; the Ethiopian reads Isaiah 53 — "How can I understand, unless someone guides me?"'],
+      ['Azotus',        34.6553, 31.8044, 'Acts 8:40',    'Caught up by the Spirit — Philip\'s next preaching post on the old Philistine plain.'],
+      ['Caesarea',      34.8920, 32.5000, 'Acts 8:40; 21:8', 'Philip settles here as an evangelist; years later his four daughters prophesy and Paul stays in his home.'],
+    ],
+  },
+  {
+    id: 'movement-saul',
+    name: 'Saul\'s Conversion',
+    period: 'AD 35–c.46',
+    acts_range: 'Acts 9; Galatians 1:17',
+    color: '#8B4F9F', // royal violet — transformation
+    narrative: 'The persecutor becomes the preacher. A light from heaven and a voice from heaven turn Saul\'s zeal inside out. He is led blind into Damascus, hidden away in Arabia, run out through a window — and finally sent home to Tarsus, waiting for the years when the Spirit will call him back.',
+    stops: [
+      ['Jerusalem',         35.2342, 31.7777, 'Acts 9:1–2',   'Breathing threats and murder; letters in hand to drag the Way\'s disciples back in chains.'],
+      ['Damascus',          36.2765, 33.5138, 'Acts 9:3–9',   'Light from heaven; voice from heaven — "Why do you persecute me?" The persecutor falls.'],
+      ['Straight Street',   36.3092, 33.5117, 'Acts 9:10–19', 'Three blind days; Ananias lays hands — scales fall, Saul is filled with the Spirit, and is baptized.'],
+      ['Arabia',            35.4419, 30.3286, 'Galatians 1:17', 'A hidden season in the desert; the gospel reshapes him before he speaks it.'],
+      ['Damascus (return)', 36.2765, 33.5138, 'Acts 9:20–25', 'Bold synagogue preaching: "He is the Son of God." Let down through the wall in a basket to escape the plot.'],
+      ['Jerusalem (return)', 35.2342, 31.7777, 'Acts 9:26–29', 'The disciples fear him; Barnabas vouches for him; he debates the Hellenists boldly until they too plot his death.'],
+      ['Tarsus',            34.8956, 36.9168, 'Acts 9:30',    'Sent home for safety — years of obscurity preparing for what the Spirit will do at Antioch.'],
+    ],
+  },
+  {
+    id: 'movement-peter',
+    name: 'Peter to the Gentiles',
+    period: 'AD 38–41',
+    acts_range: 'Acts 9:32–11:18',
+    color: '#4A8B5C', // forest green — new life
+    narrative: 'While Saul waits in Tarsus, Peter walks down to the coast. Healings at Lydda and Joppa open the way; a rooftop vision in Joppa breaks the wall — and at Caesarea, in Cornelius\'s house, the Gentile Pentecost falls. What God has cleansed, no one may call common.',
+    stops: [
+      ['Jerusalem',          35.2342, 31.7777, 'Acts 9:32',     'Peter ministering at the heart of the Jewish church before the door opens to the nations.'],
+      ['Lydda',              34.8956, 31.9519, 'Acts 9:32–35',  'Aeneas, bedridden eight years, healed in the Name; all who lived in Lydda and Sharon turned to the Lord.'],
+      ['Joppa',              34.7569, 32.0500, 'Acts 9:36–10:23', 'Tabitha raised at Simon the tanner\'s house; the rooftop vision: "Do not call unclean what God has cleansed."'],
+      ['Caesarea',           34.8920, 32.5000, 'Acts 10:24–48', 'Cornelius\'s household receives the Spirit while Peter is still preaching — the Gentile Pentecost.'],
+      ['Jerusalem (return)', 35.2342, 31.7777, 'Acts 11:1–18',  'Peter explains; the church glorifies God — "to the Gentiles also God has granted repentance unto life."'],
+    ],
+  },
+  {
+    id: 'movement-antioch',
+    name: 'Antioch and Herod',
+    period: 'AD 41–47',
+    acts_range: 'Acts 11:19–12:25',
+    color: '#D97742', // warm orange — the new center
+    narrative: 'The scattered believers preach as they go, and a Gentile church is born in Antioch. Barnabas finds Saul in Tarsus and brings him in. There the disciples are first called *Christians* — the name fits, because they belong to Him. Meanwhile Herod\'s persecution rises in Jerusalem and falls under God\'s hand at Caesarea.',
+    stops: [
+      ['Jerusalem',                   35.2342, 31.7777, 'Acts 11:19; 12:1', 'Persecution scatters; later Herod kills James and arrests Peter — but the church prays without ceasing.'],
+      ['Phoenicia',                   35.1970, 33.2720, 'Acts 11:19',      'Believers travel as far as Phoenicia — preaching, but at first only to Jews.'],
+      ['Cyprus',                      33.9010, 35.1810, 'Acts 11:19',      'Among the dispersed, the gospel travels in the holds of trade ships.'],
+      ['Antioch',                     36.1720, 36.2270, 'Acts 11:20–21',   'Cypriots and Cyrenians speak to Greeks; "the hand of the Lord was with them" — a Gentile church is born.'],
+      ['Jerusalem (sends Barnabas)',  35.2342, 31.7777, 'Acts 11:22',      'The mother church hears and sends a good man — "full of the Holy Spirit and of faith."'],
+      ['Antioch (Barnabas arrives)',  36.1720, 36.2270, 'Acts 11:23–24',   'He sees the grace of God and rejoices; exhorts them to remain near the Lord with steadfast hearts.'],
+      ['Tarsus',                      34.8956, 36.9168, 'Acts 11:25',      'Barnabas seeks Saul out — God has been preparing him in the hidden years.'],
+      ['Antioch (a whole year)',      36.1720, 36.2270, 'Acts 11:26',      'A year of teaching together; the disciples are first called *Christians* — the name fits.'],
+      ['Caesarea',                    34.8920, 32.5000, 'Acts 12:19–23',   'Herod accepts the crowd\'s "voice of a god" and is struck down — a king who refused glory to God.'],
+      ['Jerusalem (Peter freed)',     35.2342, 31.7777, 'Acts 12:1–17',    'Angel-led from prison; "now I know the Lord has sent his angel" — the praying church amazed.'],
+      ['Antioch (return)',            36.1720, 36.2270, 'Acts 12:25',      'Barnabas and Saul return from famine relief, bringing John Mark — and the missionary chapter begins.'],
+    ],
+  },
   {
     id: 'journey-1',
     name: 'First Missionary Journey',
@@ -175,7 +271,7 @@ function buildStopFeatures(journey) {
 }
 
 function main() {
-  console.log('🛤️  Building Paul\'s journeys GeoJSON');
+  console.log('🛤️  Building Acts 1–28 movements & journeys GeoJSON');
   console.log();
 
   // Optionally cross-check coordinates against locations.json to ensure
@@ -213,12 +309,12 @@ function main() {
 
   const collection = {
     type: 'FeatureCollection',
-    name: 'Paul\'s Missionary Journeys',
+    name: 'Movements and Journeys in the Book of Acts',
     crs: { type: 'name', properties: { name: 'urn:ogc:def:crs:OGC:1.3:CRS84' } },
     metadata: {
       journeys: JOURNEYS.length,
       total_stops: totalStops,
-      attribution: 'Routes compiled from Acts; coordinates aligned to OpenBible.info modern equivalents.',
+      attribution: 'Early-church movements (Acts 1–12) and Paul\'s four journeys (Acts 13–28). Coordinates aligned to OpenBible.info modern equivalents; sub-Jerusalem teaching sites at traditional locations.',
       generatedAt: new Date().toISOString(),
     },
     features,
@@ -229,8 +325,8 @@ function main() {
 
   console.log();
   console.log(`✅ Wrote ${OUT_PATH}`);
-  console.log(`   • ${JOURNEYS.length} journeys, ${totalStops} stops`);
-  console.log(`   • ${features.length} GeoJSON features (4 routes + ${totalStops} stops)`);
+  console.log(`   • ${JOURNEYS.length} routes (5 movements + 4 Pauline journeys), ${totalStops} stops`);
+  console.log(`   • ${features.length} GeoJSON features (${JOURNEYS.length} routes + ${totalStops} stops)`);
 }
 
 main();
