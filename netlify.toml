@@ -1,10 +1,13 @@
 [build]
   # Netlify build pipeline:
   # 1. Install deps
-  # 2. Clone the OpenBible.info geocoding dataset (CC-BY-4.0)
+  # 2. Clone the OpenBible.info geocoding dataset (CC-BY-4.0) — purge any
+  #    cached copy first, since Netlify reuses /opt/build/repo between
+  #    builds and `git clone` refuses to clone into a non-empty directory.
   # 3. Run the data pipeline (BSB text, locations, journeys)
   # 4. Build the static React site to dist/
   command = """
+    rm -rf Bible-Geocoding-Data && \
     git clone --depth 1 https://github.com/openbibleinfo/Bible-Geocoding-Data.git && \
     npm run data && \
     npm run build
