@@ -26,7 +26,7 @@
  * }
  */
 
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -371,6 +371,21 @@ const KW_PANELS = {
   6: "Roma — kugera ku mpera z'isi",
 };
 
+// ─── Draft Kinyarwanda Acts 1–12 (verse-by-verse markdown source) ─────
+//
+// Pastor Fidele supplied a draft Kinyarwanda translation of Acts 1–12,
+// adapted from a public-domain English Bible. It is NOT Bibiliya Yera
+// and must be reviewed before being treated as final — those facts are
+// surfaced both in the translation metadata and as a footer caveat.
+//
+// Source markdown lives at scripts/data/rw-acts-1-12.md. If the file is
+// missing at build time the rw payload silently falls back to the
+// section-level placeholders for those chapters (i.e. the previous
+// behaviour) — no English text leaks into Kinyarwanda mode.
+const KW_DRAFT_PATH = resolve(__dirname, 'data/rw-acts-1-12.md');
+const KW_DRAFT_NAME = "Inyandiko y'agateganyo y'Ikinyarwanda — igomba gusuzumwa";
+const KW_DRAFT_NOTE = "Icyitonderwa: Uyu mwandiko w'Ibyakozwe n'Intumwa 1–12 ni inyandiko y'agateganyo y'Ikinyarwanda yakozwe hashingiwe ku mwandiko wa Bibiliya y'Icyongereza iri muri public domain. Si Bibiliya Yera, kandi ugomba gusuzumwa mbere yo gukoreshwa nk'umwandiko wa nyuma.";
+
 /** Translate a section heading; fall back to a clear "needs translation" marker. */
 function translateHeading(eng) {
   if (eng in KW_HEADINGS) return KW_HEADINGS[eng];
@@ -378,62 +393,172 @@ function translateHeading(eng) {
 }
 
 /**
- * Given an English-BSB payload, produce a same-shaped Kinyarwanda payload
- * with translated section headings and placeholder verse blocks. Each
- * section (between two headings, or chapter start → first heading, or
- * last heading → chapter end) collapses into ONE placeholder block
- * tagged with the verse range so the user knows which passage is pending.
+ * Parse the draft markdown into a Map<chapter, blocks[]>.
+ *
+ * Recognized syntax (everything else is ignored):
+ *   ## Ibyakozwe n'Intumwa <N>     → start chapter N
+ *   ### Section heading             → heading block in current chapter
+ *   <N> <verse text>                → verse block in current chapter
+ *
+ * Returns an empty Map if the markdown file is absent.
  */
-function buildKinyarwandaPlaceholder(englishPayload) {
-  const chapters = englishPayload.chapters.map(ch => {
-    // Group the chapter content into sections delimited by headings.
-    // Each section becomes: [heading?, placeholder].
-    const sections = [];
-    let currentHeading = null;
-    let currentVerses = [];
+function parseDraftMarkdown(content) {
+  const chapters = new Map();
+  let currentChapter = null;
+  let currentBlocks = null;
 
-    const flush = () => {
-      if (currentHeading === null && currentVerses.length === 0) return;
-      const firstV = currentVerses[0]?.number;
-      const lastV = currentVerses[currentVerses.length - 1]?.number;
-      const reference = firstV
-        ? `${KW_BOOK_NAME} ${ch.number}:${firstV}${lastV && lastV !== firstV ? `–${lastV}` : ''}`
-        : `${KW_BOOK_NAME} ${ch.number}`;
-      sections.push({
-        heading: currentHeading,
-        verseRange: reference,
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trimEnd();
+    if (!line) continue;
+
+    // ## Ibyakozwe n'Intumwa <N>   (also tolerates other shapes ending in a number)
+    if (line.startsWith('## ')) {
+      const m = line.match(/(\d+)\s*$/);
+      if (m) {
+        currentChapter = parseInt(m[1], 10);
+        currentBlocks = [];
+        chapters.set(currentChapter, currentBlocks);
+      } else {
+        // ## without a trailing chapter number (e.g. "## Implementation
+        // instructions") — leave the current chapter intact.
+      }
+      continue;
+    }
+
+    if (currentChapter === null) continue;
+
+    // ### Section heading
+    if (line.startsWith('### ')) {
+      currentBlocks.push({ type: 'heading', text: line.slice(4).trim() });
+      continue;
+    }
+
+    // Verse: leading verse number + space + text
+    const v = line.match(/^(\d+)\s+(.+)$/);
+    if (v) {
+      currentBlocks.push({
+        type: 'verse',
+        number: parseInt(v[1], 10),
+        text: v[2].trim(),
       });
-      currentHeading = null;
-      currentVerses = [];
+      continue;
+    }
+
+    // Lines that don't match (blockquotes, separators, prose around the
+    // draft, etc.) are silently dropped.
+  }
+
+  return chapters;
+}
+
+/** Load the parsed draft, or return an empty Map if the file isn't present. */
+function loadDraftKinyarwandaActs() {
+  if (!existsSync(KW_DRAFT_PATH)) {
+    console.log(`   • No draft markdown at ${KW_DRAFT_PATH} — using placeholders for all chapters`);
+    return new Map();
+  }
+  const content = readFileSync(KW_DRAFT_PATH, 'utf-8');
+  const map = parseDraftMarkdown(content);
+  let totalVerses = 0;
+  let totalHeadings = 0;
+  for (const blocks of map.values()) {
+    for (const b of blocks) {
+      if (b.type === 'verse') totalVerses++;
+      else if (b.type === 'heading') totalHeadings++;
+    }
+  }
+  console.log(`   • Loaded draft Kinyarwanda Acts: ${map.size} chapters, ${totalHeadings} headings, ${totalVerses} verses`);
+  return map;
+}
+
+/** Build the Kinyarwanda content array for ONE chapter using the placeholder strategy. */
+function placeholderContentForChapter(ch) {
+  // Group the English chapter content into sections delimited by headings.
+  // Each section becomes [heading?, placeholder] in the rw output.
+  const sections = [];
+  let currentHeading = null;
+  let currentVerses = [];
+
+  const flush = () => {
+    if (currentHeading === null && currentVerses.length === 0) return;
+    const firstV = currentVerses[0]?.number;
+    const lastV = currentVerses[currentVerses.length - 1]?.number;
+    const reference = firstV
+      ? `${KW_BOOK_NAME} ${ch.number}:${firstV}${lastV && lastV !== firstV ? `–${lastV}` : ''}`
+      : `${KW_BOOK_NAME} ${ch.number}`;
+    sections.push({ heading: currentHeading, verseRange: reference });
+    currentHeading = null;
+    currentVerses = [];
+  };
+
+  for (const block of ch.content) {
+    if (block.type === 'heading') {
+      flush();
+      currentHeading = block.text;
+    } else if (block.type === 'verse') {
+      currentVerses.push(block);
+    }
+  }
+  flush();
+
+  const content = [];
+  for (const s of sections) {
+    if (s.heading) {
+      content.push({ type: 'heading', text: translateHeading(s.heading) });
+    }
+    content.push({
+      type: 'placeholder',
+      text: KW_PLACEHOLDER_TEXT,
+      reference: s.verseRange,
+      panel: ch.panel,
+    });
+  }
+
+  return content;
+}
+
+/** Build the Kinyarwanda content array for ONE chapter using real verse blocks from the draft. */
+function draftContentForChapter(chapterNumber, draftBlocks) {
+  return draftBlocks.map(b => {
+    if (b.type === 'heading') {
+      return { type: 'heading', text: b.text };
+    }
+    // verse
+    return {
+      type: 'verse',
+      chapter: chapterNumber,
+      number: b.number,
+      text: b.text,
+      html: escapeHtml(b.text),
+      panel: panelForVerse(chapterNumber, b.number),
+      id: `act-${chapterNumber}-${b.number}`,
     };
+  });
+}
 
-    for (const block of ch.content) {
-      if (block.type === 'heading') {
-        flush();
-        currentHeading = block.text;
-      } else if (block.type === 'verse') {
-        currentVerses.push(block);
-      }
+/**
+ * Build the full Kinyarwanda payload. Uses real verse blocks from the
+ * supplied `draftChapters` Map where available (currently Acts 1–12) and
+ * falls back to the section-level placeholder for chapters not covered.
+ *
+ * Translation metadata is labelled as a DRAFT, never as "Bibiliya Yera"
+ * — see the brief in scripts/data/rw-acts-1-12.md for the rules around
+ * attribution.
+ */
+function buildKinyarwandaPlaceholder(englishPayload, draftChapters = new Map()) {
+  let chaptersWithDraft = 0;
+  let chaptersWithPlaceholder = 0;
+
+  const chapters = englishPayload.chapters.map(ch => {
+    const draft = draftChapters.get(ch.number);
+    let content;
+    if (draft && draft.length > 0) {
+      content = draftContentForChapter(ch.number, draft);
+      chaptersWithDraft++;
+    } else {
+      content = placeholderContentForChapter(ch);
+      chaptersWithPlaceholder++;
     }
-    flush();
-
-    // Materialize into the actual content array — heading + placeholder.
-    const content = [];
-    for (const s of sections) {
-      if (s.heading) {
-        content.push({
-          type: 'heading',
-          text: translateHeading(s.heading),
-        });
-      }
-      content.push({
-        type: 'placeholder',
-        text: KW_PLACEHOLDER_TEXT,
-        reference: s.verseRange,
-        panel: ch.panel,
-      });
-    }
-
     return {
       number: ch.number,
       panel: ch.panel,
@@ -443,15 +568,21 @@ function buildKinyarwandaPlaceholder(englishPayload) {
     };
   });
 
+  // Stash the counters on the payload so main() can log them.
+  const _stats = { chaptersWithDraft, chaptersWithPlaceholder };
+
   return {
+    _stats,
     translation: {
-      id: 'placeholder-rw',
-      name: "Umwandiko w'Ikinyarwanda uzongerwamo",
-      shortName: 'RW',
+      id: 'draft-rw',
+      name: KW_DRAFT_NAME,
+      shortName: 'Draft RW',
       website: '',
       licenseUrl: '',
       language: 'kin',
-      isPlaceholder: true,
+      isPlaceholder: chaptersWithDraft === 0,
+      isDraft: chaptersWithDraft > 0,
+      draftNote: chaptersWithDraft > 0 ? KW_DRAFT_NOTE : undefined,
       langCode: 'rw',
     },
     book: englishPayload.book,
@@ -518,14 +649,25 @@ async function main() {
   mkdirSync(dirname(enPath), { recursive: true });
   writeFileSync(enPath, JSON.stringify(englishPayload, null, 2));
 
-  // Kinyarwanda placeholder → public/data/scripture/rw/acts.json
-  const rwPayload = buildKinyarwandaPlaceholder(englishPayload);
+  // Kinyarwanda → public/data/scripture/rw/acts.json
+  // Loads the optional draft markdown (Acts 1–12) and merges real verse
+  // blocks for those chapters; remaining chapters keep section-level
+  // placeholders so the UI never shows English text in rw mode.
+  console.log();
+  console.log('📜 Building Kinyarwanda Acts payload');
+  const draftChapters = loadDraftKinyarwandaActs();
+  const rwPayloadFull = buildKinyarwandaPlaceholder(englishPayload, draftChapters);
+  const { _stats: rwStats, ...rwPayload } = rwPayloadFull;
   const rwPath = outPathFor('rw');
   mkdirSync(dirname(rwPath), { recursive: true });
   writeFileSync(rwPath, JSON.stringify(rwPayload, null, 2));
 
   const rwSections = rwPayload.chapters.reduce(
     (sum, c) => sum + c.content.filter(b => b.type === 'placeholder').length,
+    0,
+  );
+  const rwRealVerses = rwPayload.chapters.reduce(
+    (sum, c) => sum + c.content.filter(b => b.type === 'verse').length,
     0,
   );
   const rwTranslatedHeadings = rwPayload.chapters.reduce(
@@ -545,7 +687,9 @@ async function main() {
   console.log(`   • Audio links included from openbible.com`);
   console.log();
   console.log(`✅ Wrote ${rwPath}`);
-  console.log(`   • Translation: ${rwPayload.translation.name} (placeholder)`);
+  console.log(`   • Translation: ${rwPayload.translation.name}`);
+  console.log(`   • ${rwStats.chaptersWithDraft} chapters use the Kinyarwanda draft (real verses)`);
+  console.log(`   • ${rwStats.chaptersWithPlaceholder} chapters fall back to placeholder sections`);
   console.log(`   • 28 chapters, ${rwSections} placeholder sections`);
   console.log(`   • Headings: ${rwTranslatedHeadings} translated, ${rwUntranslatedHeadings} still pending (rendered as "Umutwe uzongerwamo")`);
 }

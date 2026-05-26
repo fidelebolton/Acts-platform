@@ -15,11 +15,26 @@ export interface ScripturePayload {
     licenseUrl: string;
     language: string;
     /**
-     * True when the Scripture file is a placeholder (no real verses).
+     * True when the Scripture file is a placeholder (no real verses at all).
      * The footer renders differently in this case — no shortName badge,
      * no "public domain" credit.
      */
     isPlaceholder?: boolean;
+    /**
+     * True when the Scripture file contains real verses but is still a
+     * draft (work in progress, not yet approved). The footer renders
+     * the translation name without "public domain" and prints a small
+     * `draftNote` caveat below. Currently used by the Kinyarwanda
+     * Acts 1–12 draft, which is adapted from a public-domain English
+     * Bible and labelled as "Inyandiko y'agateganyo" until reviewed.
+     */
+    isDraft?: boolean;
+    /**
+     * Optional caveat string rendered under the Scripture footer when
+     * `isDraft` is true. Stored on the translation rather than in i18n
+     * because it belongs to the dataset.
+     */
+    draftNote?: string;
     /** ISO 639 code matching the i18n LangCode (e.g. "en", "rw"). */
     langCode?: string;
   };

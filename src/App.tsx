@@ -218,26 +218,35 @@ export default function App() {
         onJourneySelect={setActiveJourney}
       />
 
-      {/* Footer — Scripture credit changes by language. For a real
-          translation we show name + shortName + "public domain"; for the
-          Kinyarwanda placeholder we show only the placeholder name. */}
-      <footer className="border-t border-cream-dark bg-cream-warm/80 py-3 px-4 text-xs text-navy/60 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          {t.app.scriptureCredit}:{' '}
-          {scripture.translation.isPlaceholder ? (
-            <span className="italic">{scripture.translation.name}</span>
-          ) : (
-            <>
-              {scripture.translation.name} ({scripture.translation.shortName}) · {t.app.publicDomain}
-            </>
-          )}
+      {/* Footer — Scripture credit changes by language.
+            • Real translation (e.g. BSB): name + shortName + "public domain".
+            • Draft translation (e.g. Kinyarwanda Acts 1–12 draft): italic
+              name only; a small caveat note renders on its own row below.
+            • Placeholder only (no verses): italic name only. */}
+      <footer className="border-t border-cream-dark bg-cream-warm/80 text-xs text-navy/60">
+        <div className="py-3 px-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            {t.app.scriptureCredit}:{' '}
+            {scripture.translation.isPlaceholder || scripture.translation.isDraft ? (
+              <span className="italic">{scripture.translation.name}</span>
+            ) : (
+              <>
+                {scripture.translation.name} ({scripture.translation.shortName}) · {t.app.publicDomain}
+              </>
+            )}
+          </div>
+          <div>
+            {t.app.locationsCredit}: {locations.attribution}
+          </div>
+          <div>
+            Potter's Wheel Church · <a href="https://potterswheelchurch.com" className="text-gold-dark hover:text-navy">potterswheelchurch.com</a>
+          </div>
         </div>
-        <div>
-          {t.app.locationsCredit}: {locations.attribution}
-        </div>
-        <div>
-          Potter's Wheel Church · <a href="https://potterswheelchurch.com" className="text-gold-dark hover:text-navy">potterswheelchurch.com</a>
-        </div>
+        {scripture.translation.isDraft && scripture.translation.draftNote && (
+          <div className="px-4 pb-3 -mt-1 text-[11px] italic text-navy/55 max-w-4xl leading-snug">
+            {scripture.translation.draftNote}
+          </div>
+        )}
       </footer>
     </div>
   );
