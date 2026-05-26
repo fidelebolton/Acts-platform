@@ -57,6 +57,23 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
     };
   }, []);
 
+  // T1.1 — Fix the v1 redraw bug. MapLibre doesn't auto-detect container
+  // resizes, so when the user switches between Scripture/Teaching tabs
+  // (which changes the left pane width and therefore the map width) the
+  // canvas keeps its old size and the tiles disappear. A ResizeObserver
+  // tied to the container fires map.resize() whenever the container's
+  // box changes, which also covers browser resizes and mobile rotation.
+  useEffect(() => {
+    if (!containerRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+    if (!map) return;
+    const obs = new ResizeObserver(() => {
+      try { map.resize(); } catch { /* map may be mid-tear-down */ }
+    });
+    obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, [mapLoaded]);
+
   // Add/update location markers when locations change
   useEffect(() => {
     const map = mapRef.current;
@@ -174,7 +191,10 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
         },
       });
 
-      // Stop markers
+      // Stop markers — larger for the active journey so direction reads
+      // clearly. The active journey's stops also carry a numbered badge
+      // (see `journey-stop-numbers` below) and Origin/Destination labels
+      // for the first and last stop (`journey-stop-endpoints`).
       map.addLayer({
         id: 'journey-stops',
         type: 'circle',
@@ -183,7 +203,7 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
         paint: {
           'circle-radius': [
             'case',
-            ['==', ['get', 'journey_id'], activeJourney ?? '__none__'], 6,
+            ['==', ['get', 'journey_id'], activeJourney ?? '__none__'], 9,
             3,
           ],
           'circle-color': ['get', 'color'],
@@ -194,6 +214,68 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
             ['==', ['get', 'journey_id'], activeJourney ?? '__none__'], 1,
             activeJourney ? 0.3 : 0.85,
           ],
+        },
+      });
+
+      // T1.2 — Numbered pins for the active journey only. The text
+      // sits on top of the enlarged active-journey circle and shows the
+      // stop's sequence (1, 2, 3, …) so the chronological direction of
+      // the journey reads at a glance.
+      map.addLayer({
+        id: 'journey-stop-numbers',
+        type: 'symbol',
+        source: 'journeys',
+        filter: ['all',
+          ['==', ['get', 'kind'], 'stop'],
+          ['==', ['get', 'journey_id'], activeJourney ?? '__none__'],
+        ],
+        layout: {
+          'text-field': ['to-string', ['get', 'sequence']],
+          'text-font': ['Noto Sans Bold'],
+          'text-size': 10,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+        },
+        paint: {
+          'text-color': '#FDF8F0',
+          'text-halo-color': '#1B2A4A',
+          'text-halo-width': 1.5,
+        },
+      });
+
+      // T1.3 — Origin / Destination badges. Renders a small label above
+      // the first stop (sequence === 1) and the last stop
+      // (sequence === total_stops) of the active journey. Text values
+      // are read from the i18n dictionary at layer-creation time and
+      // refreshed on language change in a separate effect below.
+      map.addLayer({
+        id: 'journey-stop-endpoints',
+        type: 'symbol',
+        source: 'journeys',
+        filter: ['all',
+          ['==', ['get', 'kind'], 'stop'],
+          ['==', ['get', 'journey_id'], activeJourney ?? '__none__'],
+          ['any',
+            ['==', ['get', 'sequence'], 1],
+            ['==', ['get', 'sequence'], ['get', 'total_stops']],
+          ],
+        ],
+        layout: {
+          'text-field': [
+            'case',
+            ['==', ['get', 'sequence'], 1], t.map.origin,
+            t.map.destination,
+          ],
+          'text-font': ['Noto Sans Bold'],
+          'text-size': 11,
+          'text-offset': [0, -1.9],
+          'text-anchor': 'bottom',
+          'text-allow-overlap': true,
+        },
+        paint: {
+          'text-color': '#1B2A4A',
+          'text-halo-color': '#FDF8F0',
+          'text-halo-width': 2.5,
         },
       });
 
@@ -235,30 +317,58 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
     }
   }, [journeys, mapLoaded]);
 
-  // Re-paint route emphasis when active journey changes
+  // Re-paint route emphasis + re-filter the numbered-pin and
+  // origin/destination layers when the active journey changes. Also
+  // animates the route line drawing for the newly-active journey.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !map.getLayer('journey-routes')) return;
+
+    const activeFilter = activeJourney ?? '__none__';
+
+    // Static route emphasis (dashes stay; thickness/opacity change)
     map.setPaintProperty('journey-routes', 'line-width', [
       'case',
-      ['==', ['get', 'journey_id'], activeJourney ?? '__none__'], 4,
+      ['==', ['get', 'journey_id'], activeFilter], 4,
       2.5,
     ]);
     map.setPaintProperty('journey-routes', 'line-opacity', [
       'case',
-      ['==', ['get', 'journey_id'], activeJourney ?? '__none__'], 1,
+      ['==', ['get', 'journey_id'], activeFilter],
+        // Hide the static route line while the animated overlay is drawing.
+        activeJourney ? 0 : 1,
       activeJourney ? 0.2 : 0.7,
     ]);
     map.setPaintProperty('journey-stops', 'circle-radius', [
       'case',
-      ['==', ['get', 'journey_id'], activeJourney ?? '__none__'], 6,
+      ['==', ['get', 'journey_id'], activeFilter], 9,
       3,
     ]);
     map.setPaintProperty('journey-stops', 'circle-opacity', [
       'case',
-      ['==', ['get', 'journey_id'], activeJourney ?? '__none__'], 1,
+      ['==', ['get', 'journey_id'], activeFilter], 1,
       activeJourney ? 0.3 : 0.85,
     ]);
+
+    // Update which stops carry the numbered badge.
+    if (map.getLayer('journey-stop-numbers')) {
+      map.setFilter('journey-stop-numbers', ['all',
+        ['==', ['get', 'kind'], 'stop'],
+        ['==', ['get', 'journey_id'], activeFilter],
+      ]);
+    }
+
+    // Update which stops show Origin / Destination labels.
+    if (map.getLayer('journey-stop-endpoints')) {
+      map.setFilter('journey-stop-endpoints', ['all',
+        ['==', ['get', 'kind'], 'stop'],
+        ['==', ['get', 'journey_id'], activeFilter],
+        ['any',
+          ['==', ['get', 'sequence'], 1],
+          ['==', ['get', 'sequence'], ['get', 'total_stops']],
+        ],
+      ]);
+    }
 
     // Fly to fit the active journey
     if (activeJourney) {
@@ -268,11 +378,124 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
       if (route) {
         const bbox = turf.bbox(route);
         map.fitBounds(bbox as [number, number, number, number], {
-          padding: { top: 60, bottom: 60, left: 60, right: 60 },
+          padding: { top: 80, bottom: 80, left: 80, right: 80 },
           duration: 1400,
         });
       }
     }
+  }, [activeJourney, journeys, mapLoaded]);
+
+  // T1.3 — Refresh Origin / Destination label text when the user
+  // switches language (the symbol layer text-field is set once at layer
+  // creation; this effect keeps it in sync with the active language).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !map.getLayer('journey-stop-endpoints')) return;
+    map.setLayoutProperty('journey-stop-endpoints', 'text-field', [
+      'case',
+      ['==', ['get', 'sequence'], 1], t.map.origin,
+      t.map.destination,
+    ]);
+  }, [t.map.origin, t.map.destination, mapLoaded]);
+
+  // T1.4 — Animated route drawing. When the user activates a journey,
+  // the dashed line is hidden (via the opacity rule above) and the
+  // route is "drawn" using a transient `active-route` source whose
+  // LineString grows from 0 → full length over ~1500 ms. Once the
+  // animation completes, the static dashed line fades back in.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+
+    // Ensure the source + layer exist (idempotent — created once).
+    if (!map.getSource('active-route')) {
+      map.addSource('active-route', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+      map.addLayer({
+        id: 'active-route-line',
+        type: 'line',
+        source: 'active-route',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': 5,
+          'line-opacity': 1,
+        },
+      // place above journey-routes but below the stop markers
+      }, 'journey-stops');
+    }
+
+    const source = map.getSource('active-route') as maplibregl.GeoJSONSource;
+    if (!source) return;
+
+    // No active journey → clear the animated overlay and let the
+    // static dashed routes show through normally.
+    if (!activeJourney) {
+      source.setData({ type: 'FeatureCollection', features: [] });
+      // Restore the static dashed line for all journeys.
+      map.setPaintProperty('journey-routes', 'line-opacity', [
+        'case',
+        ['==', ['get', 'journey_id'], '__none__'], 1,
+        0.7,
+      ]);
+      return;
+    }
+
+    const route = (journeys.features as RouteFeature[]).find(
+      f => f.properties.kind === 'route' && f.properties.journey_id === activeJourney,
+    );
+    if (!route) return;
+
+    const fullLine = turf.lineString(route.geometry.coordinates);
+    const totalLengthKm = turf.length(fullLine, { units: 'kilometers' });
+    if (totalLengthKm === 0) return;
+
+    const color = route.properties.color;
+    const journeyId = activeJourney;
+
+    let raf: number | null = null;
+    let cancelled = false;
+    const durationMs = 1500;
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      if (cancelled) return;
+      const elapsed = now - start;
+      // Ease-out cubic so the line slows as it approaches the destination.
+      const linear = Math.min(1, elapsed / durationMs);
+      const eased = 1 - Math.pow(1 - linear, 3);
+      const sliceKm = totalLengthKm * eased;
+      const partial = sliceKm <= 0
+        ? turf.lineString([
+            route.geometry.coordinates[0],
+            route.geometry.coordinates[0],
+          ])
+        : turf.lineSliceAlong(fullLine, 0, sliceKm, { units: 'kilometers' });
+
+      source.setData({
+        type: 'FeatureCollection',
+        features: [{
+          ...partial,
+          properties: { color, journey_id: journeyId },
+        }],
+      });
+
+      if (linear < 1) {
+        raf = requestAnimationFrame(tick);
+      }
+      // When animation completes the source already holds the full
+      // route — no further paint changes needed. The dashed static
+      // route remains hidden for the active journey (set in the
+      // activeJourney effect) so we don't end up with a doubled line.
+    };
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      cancelled = true;
+      if (raf !== null) cancelAnimationFrame(raf);
+    };
   }, [activeJourney, journeys, mapLoaded]);
 
   // Fit to the panel's bounding box on panel change (if no journey is active)

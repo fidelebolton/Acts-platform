@@ -38,7 +38,12 @@
     "allLocations": "Ahantu hose",
     "popupToday": "Ubu",
     "popupAppearsIn": "Bigaragara mu Byakozwe",
-    "popupStopOf": "Aho bahagaze ha {n} kuri {total}"
+    "popupStopOf": "Aho bahagaze ha {n} kuri {total}",
+    "origin": "Aho atangiriye",
+    "destination": "Aho ageze",
+    "walkJourney": "Tembera uru rugendo",
+    "stopJourney": "Hagarara",
+    "jumpToVerse": "Funguramo mu Byanditswe →"
   },
   "journeys": {
     "movement-jerusalem": "Yerusalemu n'Itorero rya mbere",

@@ -38,7 +38,12 @@
     "allLocations": "All locations",
     "popupToday": "Today",
     "popupAppearsIn": "Appears in Acts",
-    "popupStopOf": "Stop {n} of {total}"
+    "popupStopOf": "Stop {n} of {total}",
+    "origin": "Origin",
+    "destination": "Destination",
+    "walkJourney": "Walk this journey",
+    "stopJourney": "Stop",
+    "jumpToVerse": "Open in Scripture →"
   },
   "journeys": {
     "movement-jerusalem": "Jerusalem and the Early Church",
