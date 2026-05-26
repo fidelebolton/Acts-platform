@@ -1,0 +1,148 @@
+{
+  "_comment": "Draft Kinyarwanda translations for each journey stop's name + pastoral note. Loaded by scripts/build-journeys.mjs and merged into the GeoJSON as name_rw / notes_rw. Marked as draft alongside the Acts 1–12 Bible text. Pastor Fidele may refine any string by editing this file — the build picks changes up automatically.",
+  "_format": "Keys are journey ids from build-journeys.mjs. `stops` is a 0-indexed array matching the order in JOURNEYS[i].stops (so stops[0] is sequence=1).",
+
+  "movement-jerusalem": {
+    "stops": [
+      { "name": "Umusozi w'Elayono",          "notes": "Yesu azamuka mu ijuru avuye kuri uyu musozi; intumwa zigaruka i Yerusalemu zitegereje Umwuka wasezeranyijwe." },
+      { "name": "Cyumba cyo Hejuru",           "notes": "Abantu ijana na makumyabiri bahuje umutima; indimi z'umuriro ziragwa — Itorero rivukira mu isengesho no mu mbaraga." },
+      { "name": "Ibiraro bya Salomo",          "notes": "Ahantu h'inyigisho ya buri munsi mu rusengero — buhamya bushize amanga 'bahuje umutima' aho Yesu yagendaga." },
+      { "name": "Irembo Ryiza",                "notes": "Petero na Yohana bakiza umucumbamye; Izina rya Yesu rifungura ibyo ifeza itashoboye gufungura." },
+      { "name": "Inteko Nkuru ya Sanedirini",  "notes": "Inshuro ebyiri imbere y'Inama: 'Ntidushobora kureka kuvuga ibyo twabonye n'ibyo twumvise.'" },
+      { "name": "Akeludama",                   "notes": "Umurima waguzwe n'ifeza ya Yuda — urwibutso rukomeye rwerekana ko ubugambanyi bufite ahanyu, kandi Kristo akaba akomeza kubaka Itorero rye." }
+    ]
+  },
+
+  "movement-philip": {
+    "stops": [
+      { "name": "Yerusalemu",   "notes": "Sawuli arangiza Itorero; abizera baratatana — kandi mu kugenda kwabo, babwiriza ijambo." },
+      { "name": "Samariya",     "notes": "Filipo abwiriza Kristo; umujyi wakira ijambo ushishikaye; Petero na Yohana barambika ibiganza, Umwuka uragwa." },
+      { "name": "Inzira ya Gaza", "notes": "Marayika yohereje Filipo mu majyepfo; Umunyetiyopiya asoma Yesaya 53 — 'Nabishobora nte ntariho unsobanurira?'" },
+      { "name": "Azoto",        "notes": "Yajyanywe n'Umwuka — ahantu Filipo akomereza kubwiriza, ku ikibaya cya kera cy'Abafilisitiya." },
+      { "name": "Kayisariya",   "notes": "Filipo atura aha aba umubwiriza-butumwa; nyuma y'imyaka, abakobwa be bane barahanura kandi Pawulo amwakira mu nzu ye." }
+    ]
+  },
+
+  "movement-saul": {
+    "stops": [
+      { "name": "Yerusalemu",              "notes": "Yatsimbarayeho iterabwoba n'ubwicanyi; afite inzandiko zo gukurura abigishwa b'Inzira ababoshye." },
+      { "name": "Damasiko",                 "notes": "Umucyo uvuye mu ijuru; ijwi rivuye mu ijuru — 'Ni iki gitumye untoteza?' Uwatotezaga aragwa." },
+      { "name": "Umuhanda Ugororotse",      "notes": "Iminsi itatu atabona; Ananiya aramurambikaho ibiganza — ibishishwa biragwa, Sawuli yuzura Umwuka, akabatizwa." },
+      { "name": "Arabiya",                  "notes": "Igihe cy'agacuho mu butayu; ubutumwa bumuhindura mbere yo kububwiriza." },
+      { "name": "Damasiko (gusubira)",      "notes": "Inyigisho ishize amanga mu masinagogi: 'Ni Umwana w'Imana.' Bamumanura mu gihome mu gitebo arokoka umugambi." },
+      { "name": "Yerusalemu (gusubira)",    "notes": "Abigishwa baramutinya; Barinaba aramwakira; ajya impaka ashize amanga n'Abayuda bavuga Ikigiriki kugeza na bo bigirira umugambi wo kumwica." },
+      { "name": "Taruso",                   "notes": "Yoherezwa iwabo arinzwe — imyaka yo guhishe, itegura ibyo Umwuka azakora i Antiyokiya." }
+    ]
+  },
+
+  "movement-peter": {
+    "stops": [
+      { "name": "Yerusalemu",            "notes": "Petero akorera ku mutima w'Itorero ry'Abayahudi mbere y'uko urugi rufungukira amahanga." },
+      { "name": "Lida",                   "notes": "Ayineya, umaze imyaka umunani aryamye ku buriri, akirizwa mu Izina; abari batuye i Lida no muri Saroni bahindukirira Umwami." },
+      { "name": "Yopa",                   "notes": "Tabita azukira ku rugo rwa Simoni umukannyi w'impu; iyerekwa kuri terase: 'Icyo Imana yejeje, ntukacyite igihumanye.'" },
+      { "name": "Kayisariya",             "notes": "Urugo rwa Koruneliyo rwakira Umwuka mu gihe Petero akiri kubwiriza — Pentekote ku Banyamahanga." },
+      { "name": "Yerusalemu (gusubira)",  "notes": "Petero arasobanura; Itorero rihimbaza Imana — 'no ku Banyamahanga Imana yahaye kwihana kubageza ku bugingo.'" }
+    ]
+  },
+
+  "movement-antioch": {
+    "stops": [
+      { "name": "Yerusalemu",                        "notes": "Itotezwa ritatanya; nyuma Herode yica Yakobo afatira na Petero — ariko Itorero risenga ridahagarara." },
+      { "name": "Foyinike",                          "notes": "Abizera bagenda bagera i Foyinike — bababwiriza, ariko mu ntangiriro ari Abayuda gusa." },
+      { "name": "Kupuro",                            "notes": "Mu batatanye, ubutumwa bunyura mu mato y'ubucuruzi." },
+      { "name": "Antiyokiya",                        "notes": "Abanya-Kupuro n'Abanya-Kurene bavugana n'Abagiriki; 'ukuboko k'Umwami kwari kumwe na bo' — Itorero ry'Abanyamahanga riravuka." },
+      { "name": "Yerusalemu (yohereza Barinaba)",    "notes": "Itorero rya kibyeyi rirumva, ryohereza umugabo mwiza — 'wuzuye Umwuka Wera no kwizera.'" },
+      { "name": "Antiyokiya (Barinaba arahageze)",   "notes": "Abona ubuntu bw'Imana arishima; abasaba kugumana n'Umwami bafite umutima uhamye." },
+      { "name": "Taruso",                            "notes": "Barinaba ashakira Sawuli — Imana yari yarmamutegura mu myaka yo guhishe." },
+      { "name": "Antiyokiya (umwaka wose)",          "notes": "Umwaka wose w'inyigisho hamwe; abigishwa batangirira kwitwa Abakristo — irizina rirabakwiranye." },
+      { "name": "Kayisariya",                        "notes": "Herode yemera ko imbaga imuvuga 'ijwi ry'imana' nuko ahanagurwa — umwami wanze guha Imana icyubahiro." },
+      { "name": "Yerusalemu (Petero arekuwe)",       "notes": "Marayika amukura muri gereza; 'noneho menye ko Umwami yohereje marayika we' — Itorero risenga ritangarira ibyabaye." },
+      { "name": "Antiyokiya (gusubirayo)",           "notes": "Barinaba na Sawuli bagaruka bavuye mu mfashanyo y'inzara, bazana Yohana Mariko — n'igitabo cy'ubumisiyoneri kiratangira." }
+    ]
+  },
+
+  "journey-1": {
+    "stops": [
+      { "name": "Antiyokiya (yo muri Siriya)", "notes": "Yoherejwe n'Itorero risenga kandi rikiyiriza ubusa." },
+      { "name": "Seleukiya",                    "notes": "Ikambu yo kujya i Kupuro." },
+      { "name": "Salamis",                      "notes": "Inyigisho ya mbere mu masinagogi y'Abayuda i Kupuro." },
+      { "name": "Pafo",                         "notes": "Elima yacuwa amaso; umutware Sergiyo Pawulo aremera." },
+      { "name": "Peruge",                       "notes": "Yohana Mariko ataha asubira i Yerusalemu." },
+      { "name": "Antiyokiya ya Pisidiya",       "notes": "Inyigisho mu isinagogi — Abanyamahanga bakira ijambo bishimye." },
+      { "name": "Ikoniyo",                      "notes": "Inyigisho ishize amanga; umugambi wo kubatera amabuye — barahunga." },
+      { "name": "Lusitira",                     "notes": "Umucumbamye akirizwa; ababakekera ko ari imana, hanyuma Pawulo aterwa amabuye." },
+      { "name": "Derebe",                       "notes": "Bigishwa benshi babaho — ahantu hakure cyane mu rugendo." },
+      { "name": "Lusitira (kugaruka)",          "notes": "Bakomeza amatorero, bashyiraho abakuru." },
+      { "name": "Ikoniyo (kugaruka)",           "notes": "Kimwe — gukomeza no gushyiraho abakuru." },
+      { "name": "Antiyokiya ya Pisidiya (kugaruka)", "notes": "Kimwe — gukomeza no gushyiraho abakuru." },
+      { "name": "Peruge (kugaruka)",            "notes": "Babwiriza ijambo i Peruge." },
+      { "name": "Atalia",                       "notes": "Ikambu yo kugarukira." },
+      { "name": "Antiyokiya (kugarukayo)",      "notes": "Inkuru bayitanga mu Itorero ryabohereje — urugi rw'ukwizera rufungukiye Abanyamahanga." }
+    ]
+  },
+
+  "journey-2": {
+    "stops": [
+      { "name": "Antiyokiya (yo muri Siriya)", "notes": "Pawulo na Sila boherezwa; Barinaba ajyana Yohana Mariko i Kupuro." },
+      { "name": "Derebe",                       "notes": "Gukomeza amatorero." },
+      { "name": "Lusitira",                     "notes": "Timoteyo yifatanya nabo." },
+      { "name": "Trowa",                        "notes": "Iyerekwa ry'umugabo w'i Makedoniya — 'Ngwino udufashe.'" },
+      { "name": "Samutirakiya",                 "notes": "Bararara mu nyanja." },
+      { "name": "Neapoli",                      "notes": "Intambwe ya mbere ku butaka bw'Uburayi." },
+      { "name": "Filipi",                       "notes": "Lidiya, umukobwa w'umucakara, umurinzi w'imbohe — Itorero rya mbere ry'Uburayi." },
+      { "name": "Amfipoli",                     "notes": "Banyuraho." },
+      { "name": "Apoloniya",                    "notes": "Banyuraho." },
+      { "name": "Tesaloniki",                   "notes": "Isabato eshatu z'inyigisho ishize amanga; imbaga n'ibirego." },
+      { "name": "Beroya",                       "notes": "'Abanya-Beroya b'icyubahiro' — bashakisha mu Byanditswe buri munsi." },
+      { "name": "Atene",                        "notes": "Inyigisho yo ku Aleopago — Imana itazwi imenyekanishwa." },
+      { "name": "Korinto",                      "notes": "Amezi cumi n'umunani na Akwila na Pirisila; 1 na 2 Abatesalonike byanditswe aha." },
+      { "name": "Kenkure",                      "notes": "Ikambu iri iburasirazuba bwa Korinto — Pawulo yikemera umutwe." },
+      { "name": "Efeso (mu gihe gito)",         "notes": "Inyigisho ngufi mu isinagogi — 'Nzagaruka.'" },
+      { "name": "Kayisariya",                   "notes": "Asuhuza Itorero." },
+      { "name": "Antiyokiya (kugarukayo)",      "notes": "Ku rugo nyuma y'urugendo rwa kabiri." }
+    ]
+  },
+
+  "journey-3": {
+    "stops": [
+      { "name": "Antiyokiya (yo muri Siriya)", "notes": "Kuva ku Itorero ryatumye, ubwa gatatu." },
+      { "name": "Galatiya na Frugiya",          "notes": "Gukomeza abigishwa bose umwe ku wundi." },
+      { "name": "Efeso",                        "notes": "Umurimo w'imyaka itatu; imvururu z'abacuzi b'ifeza; ijambo riragwira cyane." },
+      { "name": "Makedoniya",                   "notes": "Asubira i Filipi, Tesaloniki, Beroya." },
+      { "name": "Ubugiriki (Korinto)",          "notes": "Amezi atatu — ahari ni bwo yandika urwandiko ku Baroma." },
+      { "name": "Filipi (Pasika)",              "notes": "Bagenda mu mato nyuma y'Umunsi mukuru w'Imitsima Itasembuwe." },
+      { "name": "Trowa",                        "notes": "Eyutuko agwa mu idirishya — akazurwa." },
+      { "name": "Aso",                          "notes": "Pawulo ajya ku butaka imbere; arongera kwifatanya n'ubwato." },
+      { "name": "Mitilene",                     "notes": "Bararara kuri Lesibo." },
+      { "name": "Kiyo",                         "notes": "Banyura ku kirwa." },
+      { "name": "Samo",                         "notes": "Bagera ku kirwa." },
+      { "name": "Mileto",                       "notes": "Asezera mu maganya abakuru b'Itorero ry'i Efeso." },
+      { "name": "Kose",                         "notes": "Urugendo rw'umunsi rujya i Kose." },
+      { "name": "Rodo",                         "notes": "Bakomeza bajya i Rodo." },
+      { "name": "Patara",                       "notes": "Bahindura amato bajya mu rujyana i Foyinike." },
+      { "name": "Tiro",                         "notes": "Abigishwa baburira Pawulo binyujijwe ku Mwuka ngo atazamuka i Yerusalemu." },
+      { "name": "Putolemayi",                   "notes": "Umunsi umwe na bene Data." },
+      { "name": "Kayisariya",                   "notes": "Filipo umubwiriza-butumwa aramwakira; Agabo amubohera amaboko." },
+      { "name": "Yerusalemu",                   "notes": "Afatirwa mu rusengero — urugendo rurangirira mu minyururu." }
+    ]
+  },
+
+  "journey-4": {
+    "stops": [
+      { "name": "Kayisariya",        "notes": "Yinjira mu bwato ari ku butegetsi bwa Yuliyo umutware w'ijana." },
+      { "name": "Sidoni",             "notes": "Yuliyo aremera mu buntu ko Pawulo asura inshuti." },
+      { "name": "Mira",               "notes": "Bahindura ubwato bwa Alegizandere bw'ingano bujya muri Italiya." },
+      { "name": "Kinido",             "notes": "Bagenda mu mato banyuranye n'umuyaga." },
+      { "name": "Inkingi ya Salimone","notes": "Bazenguruka ku impera y'iburasirazuba bwa Kerete." },
+      { "name": "Ibyambu Byiza",      "notes": "Iburira rya Pawulo ryanzwe — bakomeza ingendo mu mato." },
+      { "name": "Bajyanwa n'umuyaga", "notes": "Iminsi cumi n'ine mu nkubi; Pawulo abona marayika; ubugingo 276 burakizwa." },
+      { "name": "Malita",             "notes": "Ubwato bwaracitse; inzoka; umukuru Puburiyusi akizwa; amezi atatu ku kirwa." },
+      { "name": "Sirakusa",           "notes": "Iminsi itatu muri Sisiliya." },
+      { "name": "Regiyo",             "notes": "Umuyaga mwiza w'amajyepfo urahaguruka." },
+      { "name": "Puteoli",            "notes": "Bene Data muri Italiya — iminsi irindwi hamwe." },
+      { "name": "Isoko rya Apiyo",    "notes": "Abizera b'i Roma baza ibirometero birenga 70 kumusanganira." },
+      { "name": "Inzu Eshatu",        "notes": "'Ababonye, Pawulo ashima Imana arongera kugira ubutwari.'" },
+      { "name": "Roma",               "notes": "Imyaka ibiri afungiwe mu nzu — abwiriza ubwami ashize amanga, nta nkomyi." }
+    ]
+  }
+}

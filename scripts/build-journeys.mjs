@@ -36,6 +36,30 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = resolve(__dirname, '../public/data/journeys.geojson');
 const LOC_PATH = resolve(__dirname, '../public/data/locations.json');
+const RW_OVERLAY_PATH = resolve(__dirname, 'data/rw-journeys.json');
+
+/**
+ * Load the optional Kinyarwanda translation overlay. Keyed by journey id;
+ * each entry has a `stops` array matching the order of JOURNEYS[i].stops
+ * with { name, notes } objects per stop. If the file is missing the
+ * function returns an empty map and the GeoJSON stops carry no rw fields
+ * (the UI falls back to the English name + a clear "draft" caveat).
+ */
+function loadKinyarwandaOverlay() {
+  if (!existsSync(RW_OVERLAY_PATH)) return new Map();
+  try {
+    const json = JSON.parse(readFileSync(RW_OVERLAY_PATH, 'utf-8'));
+    const map = new Map();
+    for (const [journeyId, entry] of Object.entries(json)) {
+      if (typeof entry !== 'object' || !entry || !Array.isArray(entry.stops)) continue;
+      map.set(journeyId, entry.stops);
+    }
+    return map;
+  } catch (err) {
+    console.warn(`   ⚠ Failed to parse ${RW_OVERLAY_PATH}: ${err.message}`);
+    return new Map();
+  }
+}
 
 // Each waypoint: [ancient_name, lon, lat, acts_ref, notes]
 // Coordinates correspond to the modern equivalent of each ancient location.
@@ -251,23 +275,31 @@ function buildFeature(journey) {
   };
 }
 
-function buildStopFeatures(journey) {
-  return journey.stops.map(([name, lon, lat, ref, notes], i) => ({
-    type: 'Feature',
-    id: `${journey.id}-stop-${i + 1}`,
-    geometry: { type: 'Point', coordinates: [lon, lat] },
-    properties: {
-      kind: 'stop',
-      journey_id: journey.id,
-      journey_name: journey.name,
-      color: journey.color,
-      sequence: i + 1,
-      total_stops: journey.stops.length,
-      name,
-      acts_ref: ref,
-      notes,
-    },
-  }));
+function buildStopFeatures(journey, rwOverlay) {
+  const rwStops = rwOverlay.get(journey.id) || [];
+  return journey.stops.map(([name, lon, lat, ref, notes], i) => {
+    const rw = rwStops[i];
+    return {
+      type: 'Feature',
+      id: `${journey.id}-stop-${i + 1}`,
+      geometry: { type: 'Point', coordinates: [lon, lat] },
+      properties: {
+        kind: 'stop',
+        journey_id: journey.id,
+        journey_name: journey.name,
+        color: journey.color,
+        sequence: i + 1,
+        total_stops: journey.stops.length,
+        name,
+        acts_ref: ref,
+        notes,
+        // Optional Kinyarwanda overrides (from scripts/data/rw-journeys.json).
+        // MapPane reads these when the active language is rw, else falls back.
+        ...(rw?.name ? { name_rw: rw.name } : {}),
+        ...(rw?.notes ? { notes_rw: rw.notes } : {}),
+      },
+    };
+  });
 }
 
 function main() {
@@ -285,12 +317,24 @@ function main() {
     }
   }
 
+  // Load the Kinyarwanda translation overlay (optional — drives name_rw /
+  // notes_rw on each stop feature). The MapPane popups pick the right
+  // language at render time.
+  const rwOverlay = loadKinyarwandaOverlay();
+  if (rwOverlay.size > 0) {
+    let translatedStops = 0;
+    for (const stops of rwOverlay.values()) translatedStops += stops.length;
+    console.log(`   • Loaded Kinyarwanda overlay: ${rwOverlay.size} journeys, ${translatedStops} stop translations`);
+  } else {
+    console.log(`   • No Kinyarwanda overlay found — stops will use English only`);
+  }
+
   const features = [];
   let totalStops = 0;
 
   for (const j of JOURNEYS) {
     features.push(buildFeature(j));
-    features.push(...buildStopFeatures(j));
+    features.push(...buildStopFeatures(j, rwOverlay));
     totalStops += j.stops.length;
 
     // Cross-check a few stops against OpenBible coords (informational)

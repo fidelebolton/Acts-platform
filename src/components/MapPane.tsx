@@ -22,7 +22,7 @@ interface Props {
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
 export function MapPane({ locations, journeys, activeJourney, onJourneySelect, activePanel, activeVerseId, onOpenVerse }: Props) {
-  const { t, fmt, journeyName } = useT();
+  const { t, fmt, lang, journeyName } = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const popupRef = useRef<Popup | null>(null);
@@ -56,10 +56,12 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
   // in the currently-selected language (even after the user switches).
   const tRef = useRef(t);
   const fmtRef = useRef(fmt);
+  const langRef = useRef(lang);
   useEffect(() => {
     tRef.current = t;
     fmtRef.current = fmt;
-  }, [t, fmt]);
+    langRef.current = lang;
+  }, [t, fmt, lang]);
 
   // Init map once
   useEffect(() => {
@@ -338,16 +340,23 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
         const p = feat.properties as Record<string, string>;
         const tt = tRef.current;
         const ff = fmtRef.current;
+        const isRw = langRef.current === 'rw';
         // Look up the translated journey name (falls back to the data value).
         const localizedJourney = (tt.journeys as Record<string, string>)[p.journey_id] ?? p.journey_name;
-        // Parse the acts_ref (e.g. "Acts 13:1–3") to extract the first
-        // chapter + verse for the "Jump to verse" link (T2.2).
+        // Stop name + notes prefer the Kinyarwanda overlay (set in
+        // scripts/data/rw-journeys.json) when in Kinyarwanda mode.
+        // English remains the data file's canonical value.
+        const localizedName = isRw && p.name_rw ? p.name_rw : p.name;
+        const localizedNotes = isRw && p.notes_rw ? p.notes_rw : p.notes;
+        // "Acts X:Y" → "Ibyakozwe n'Intumwa X:Y" in Kinyarwanda mode. The
+        // reference itself is authored as English ("Acts 13:1–3") in the
+        // data, so we swap only the book-name prefix here.
+        const localizedRef = String(p.acts_ref || '').replace(/^Acts\b/, tt.scripture.chapterPrefix);
+        // Parse the acts_ref to extract the first chapter + verse for
+        // the "Jump to verse" link (T2.2).
         const refMatch = String(p.acts_ref || '').match(/(\d+):(\d+)/);
         const jumpCh = refMatch ? parseInt(refMatch[1], 10) : 0;
         const jumpV = refMatch ? parseInt(refMatch[2], 10) : 0;
-        // Stop name, acts_ref, and notes come from journeys.geojson. They
-        // are authored in English; when a Kinyarwanda BSB/journey dataset
-        // exists, regenerate journeys.geojson and these will follow.
         popupRef.current?.remove();
         popupRef.current = new maplibregl.Popup({ offset: 12 })
           .setLngLat((feat.geometry as GeoJSON.Point).coordinates as [number, number])
@@ -355,10 +364,10 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
             <div class="text-xs uppercase tracking-wider font-bold" style="color:${p.color}">
               ${escapeHtml(ff(tt.map.popupStopOf, { n: p.sequence, total: p.total_stops }))}
             </div>
-            <div class="font-heading text-base text-navy font-semibold">${escapeHtml(p.name)}</div>
+            <div class="font-heading text-base text-navy font-semibold">${escapeHtml(localizedName)}</div>
             <div class="text-xs text-navy/70 italic">${escapeHtml(localizedJourney)}</div>
-            <div class="text-xs text-navy mt-1">${escapeHtml(p.acts_ref)}</div>
-            <div class="text-xs text-navy/80 mt-1 max-w-[260px]">${escapeHtml(p.notes)}</div>
+            <div class="text-xs text-navy mt-1">${escapeHtml(localizedRef)}</div>
+            <div class="text-xs text-navy/80 mt-1 max-w-[260px]">${escapeHtml(localizedNotes)}</div>
             ${jumpCh > 0 ? `<button data-jump-verse data-chapter="${jumpCh}" data-verse="${jumpV}" class="mt-1.5 text-[11px] text-gold-dark hover:text-navy font-bold cursor-pointer">${escapeHtml(tt.map.jumpToVerse)}</button>` : ''}
           `)
           .addTo(map);
@@ -678,10 +687,14 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
       const stop = stops[idx];
       if (!stop) return;
       const [lon, lat] = stop.geometry.coordinates as [number, number];
-      const p = stop.properties;
+      const p = stop.properties as StopFeature['properties'] & { name_rw?: string; notes_rw?: string };
       const tt = tRef.current;
       const ff = fmtRef.current;
+      const isRw = langRef.current === 'rw';
       const localizedJourney = (tt.journeys as Record<string, string>)[p.journey_id] ?? p.journey_name;
+      const localizedName = isRw && p.name_rw ? p.name_rw : p.name;
+      const localizedNotes = isRw && p.notes_rw ? p.notes_rw : p.notes;
+      const localizedRef = String(p.acts_ref || '').replace(/^Acts\b/, tt.scripture.chapterPrefix);
 
       map.flyTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 5), duration: 1200, essential: true });
 
@@ -692,10 +705,10 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
           <div class="text-xs uppercase tracking-wider font-bold" style="color:${p.color}">
             ${escapeHtml(ff(tt.map.popupStopOf, { n: p.sequence, total: p.total_stops }))}
           </div>
-          <div class="font-heading text-base text-navy font-semibold">${escapeHtml(p.name)}</div>
+          <div class="font-heading text-base text-navy font-semibold">${escapeHtml(localizedName)}</div>
           <div class="text-xs text-navy/70 italic">${escapeHtml(localizedJourney)}</div>
-          <div class="text-xs text-navy mt-1">${escapeHtml(p.acts_ref)}</div>
-          <div class="text-xs text-navy/80 mt-1 max-w-[260px]">${escapeHtml(p.notes)}</div>
+          <div class="text-xs text-navy mt-1">${escapeHtml(localizedRef)}</div>
+          <div class="text-xs text-navy/80 mt-1 max-w-[260px]">${escapeHtml(localizedNotes)}</div>
         `)
         .addTo(map);
     };
