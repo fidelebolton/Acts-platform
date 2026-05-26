@@ -34,20 +34,29 @@ export default function App() {
     document.title = `${t.app.title} — Pastor Fidele Bolton`;
   }, [t]);
 
+  // Re-fetch Scripture whenever the language changes — each language has
+  // its own Acts file under public/data/scripture/<lang>/acts.json.
+  // Locations and journeys are language-agnostic (their visible names are
+  // overlaid via i18n at render time) so we still load them once per session.
   useEffect(() => {
+    let cancelled = false;
+    setData({ status: 'loading' });
     Promise.all([
-      fetch('/data/bsb-acts.json').then(r => r.ok ? r.json() : Promise.reject(new Error('bsb-acts.json: ' + r.status))),
+      fetch(`/data/scripture/${lang}/acts.json`).then(r => r.ok ? r.json() : Promise.reject(new Error(`scripture/${lang}/acts.json: ${r.status}`))),
       fetch('/data/locations.json').then(r => r.ok ? r.json() : Promise.reject(new Error('locations.json: ' + r.status))),
       fetch('/data/journeys.geojson').then(r => r.ok ? r.json() : Promise.reject(new Error('journeys.geojson: ' + r.status))),
     ])
       .then(([scripture, locations, journeys]) => {
+        if (cancelled) return;
         setData({ status: 'ready', scripture, locations, journeys });
       })
       .catch(err => {
+        if (cancelled) return;
         console.error('Data load failed', err);
         setData({ status: 'error', message: err.message });
       });
-  }, []);
+    return () => { cancelled = true; };
+  }, [lang]);
 
   // Track active panel based on the verse currently in view
   const handleVerseInView = useCallback((verseId: string, panel: Panel['id']) => {
@@ -209,10 +218,19 @@ export default function App() {
         onJourneySelect={setActiveJourney}
       />
 
-      {/* Footer */}
+      {/* Footer — Scripture credit changes by language. For a real
+          translation we show name + shortName + "public domain"; for the
+          Kinyarwanda placeholder we show only the placeholder name. */}
       <footer className="border-t border-cream-dark bg-cream-warm/80 py-3 px-4 text-xs text-navy/60 flex flex-wrap items-center justify-between gap-2">
         <div>
-          {t.app.scriptureCredit}: {scripture.translation.name} ({scripture.translation.shortName}) · {t.app.publicDomain}
+          {t.app.scriptureCredit}:{' '}
+          {scripture.translation.isPlaceholder ? (
+            <span className="italic">{scripture.translation.name}</span>
+          ) : (
+            <>
+              {scripture.translation.name} ({scripture.translation.shortName}) · {t.app.publicDomain}
+            </>
+          )}
         </div>
         <div>
           {t.app.locationsCredit}: {locations.attribution}

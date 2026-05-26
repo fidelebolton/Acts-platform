@@ -14,6 +14,14 @@ export interface ScripturePayload {
     website: string;
     licenseUrl: string;
     language: string;
+    /**
+     * True when the Scripture file is a placeholder (no real verses).
+     * The footer renders differently in this case — no shortName badge,
+     * no "public domain" credit.
+     */
+    isPlaceholder?: boolean;
+    /** ISO 639 code matching the i18n LangCode (e.g. "en", "rw"). */
+    langCode?: string;
   };
   book: {
     id: 'ACT';
@@ -44,7 +52,7 @@ export interface Chapter {
   audio: Record<string, string>; // reader name → mp3 url
 }
 
-export type ChapterBlock = HeadingBlock | VerseBlock;
+export type ChapterBlock = HeadingBlock | VerseBlock | PlaceholderBlock;
 
 export interface HeadingBlock {
   type: 'heading';
@@ -59,6 +67,19 @@ export interface VerseBlock {
   html: string;        // rendered HTML (with words-of-jesus spans, footnote refs)
   panel: 1 | 2 | 3 | 4 | 5 | 6;
   id: string;          // "act-1-19"
+}
+
+/**
+ * A placeholder block — used when a language's Scripture text isn't yet
+ * connected (e.g. the current Kinyarwanda dataset, which has translated
+ * section headings but no verse text). Rendered as italic muted prose
+ * with the verse-range label so the user knows which passage is pending.
+ */
+export interface PlaceholderBlock {
+  type: 'placeholder';
+  text: string;        // localized placeholder, e.g. "Umwandiko wa Bibiliya …"
+  reference?: string;  // localized verse-range label, e.g. "Ibyakozwe 1:1–5"
+  panel: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 export interface Footnote {

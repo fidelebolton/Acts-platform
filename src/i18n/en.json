@@ -30,7 +30,8 @@
   "scripture": {
     "panelOf": "Panel {n} of 6",
     "chapterPrefix": "Acts",
-    "panelNotFound": "Panel not found."
+    "panelNotFound": "Panel not found.",
+    "chapterUnavailable": "This chapter is not yet available in this language."
   },
   "map": {
     "legendHeader": "Paul's Journeys",

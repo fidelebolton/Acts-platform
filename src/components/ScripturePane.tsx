@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import type { ScripturePayload, Panel, VerseBlock } from '../types';
+import type { ScripturePayload, Panel, VerseBlock, PlaceholderBlock } from '../types';
 import { useT } from '../i18n/LanguageContext';
 
 interface Props {
@@ -83,16 +83,26 @@ export function ScripturePane({ scripture, activePanel, activeVerseId, onVerseIn
         </p>
       </header>
 
-      {chaptersInPanel.map(chapter => (
-        <ChapterBlock
-          key={chapter.number}
-          chapter={chapter}
-          bookLabel={bookLabel}
-          activeVerseId={activeVerseId}
-          panelStart={activePanelMeta.startChapter === chapter.number ? activePanelMeta.startVerse : null}
-          panelEnd={activePanelMeta.endChapter === chapter.number ? activePanelMeta.endVerse : null}
-        />
-      ))}
+      {chaptersInPanel.length === 0 ? (
+        // Defensive: every active panel should match at least one chapter
+        // in the loaded Scripture file. If it doesn't, surface a clean
+        // message in the active language — never silently fall back.
+        <div className="text-sm text-navy/60 italic py-6">
+          {t.scripture.chapterUnavailable}
+        </div>
+      ) : (
+        chaptersInPanel.map(chapter => (
+          <ChapterBlock
+            key={chapter.number}
+            chapter={chapter}
+            bookLabel={bookLabel}
+            unavailableMessage={t.scripture.chapterUnavailable}
+            activeVerseId={activeVerseId}
+            panelStart={activePanelMeta.startChapter === chapter.number ? activePanelMeta.startVerse : null}
+            panelEnd={activePanelMeta.endChapter === chapter.number ? activePanelMeta.endVerse : null}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -100,12 +110,27 @@ export function ScripturePane({ scripture, activePanel, activeVerseId, onVerseIn
 interface ChapterBlockProps {
   chapter: ScripturePayload['chapters'][number];
   bookLabel: string;
+  unavailableMessage: string;
   activeVerseId: string | null;
   panelStart: number | null; // verse where this panel begins in this chapter
   panelEnd: number | null;   // verse where this panel ends in this chapter
 }
 
-function ChapterBlock({ chapter, bookLabel, activeVerseId, panelStart, panelEnd }: ChapterBlockProps) {
+function ChapterBlock({ chapter, bookLabel, unavailableMessage, activeVerseId, panelStart, panelEnd }: ChapterBlockProps) {
+  // Defensive: an empty chapter (no headings, no verses, no placeholders)
+  // means the language's data file is missing this chapter. Render the
+  // localized unavailable message instead of an empty space.
+  if (!chapter.content || chapter.content.length === 0) {
+    return (
+      <section className="mb-8">
+        <h3 className="chapter-heading">
+          <span>{bookLabel} {chapter.number}</span>
+        </h3>
+        <div className="text-sm text-navy/60 italic py-4">{unavailableMessage}</div>
+      </section>
+    );
+  }
+
   return (
     <section className="mb-8 animate-fade-in">
       <h3 className="chapter-heading">
@@ -119,6 +144,26 @@ function ChapterBlock({ chapter, bookLabel, activeVerseId, panelStart, panelEnd 
               <h4 key={i} className="scripture-heading">
                 {block.text}
               </h4>
+            );
+          }
+
+          if (block.type === 'placeholder') {
+            // Used by languages without a verse-by-verse translation yet
+            // (currently Kinyarwanda). One block per section, with the
+            // localized verse-range note above the placeholder text.
+            const ph = block as PlaceholderBlock;
+            return (
+              <div
+                key={i}
+                className="scripture-placeholder my-3 px-3 py-2 border-l-2 border-gold/40 bg-cream-warm/40 rounded-r text-navy/70"
+              >
+                {ph.reference && (
+                  <div className="text-[10px] uppercase tracking-wider text-gold-dark/80 font-bold mb-1 not-italic">
+                    {ph.reference}
+                  </div>
+                )}
+                <div className="text-sm italic leading-relaxed">{ph.text}</div>
+              </div>
             );
           }
 

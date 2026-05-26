@@ -30,7 +30,8 @@
   "scripture": {
     "panelOf": "Igice cya {n} kuri 6",
     "chapterPrefix": "Ibyakozwe n'Intumwa",
-    "panelNotFound": "Igice nticyaboneka."
+    "panelNotFound": "Igice nticyaboneka.",
+    "chapterUnavailable": "Iki gice ntikirahari muri uru rurimi."
   },
   "map": {
     "legendHeader": "Ingendo za Pawulo",
