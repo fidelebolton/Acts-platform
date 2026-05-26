@@ -64,6 +64,25 @@ export default function App() {
     setActivePanel(panel);
   }, []);
 
+  // T2.2 — When the user clicks "Jump to verse" inside a map popup
+  // (added in commit-after-Tier-1 — verse↔map sync, bi-directional).
+  // switch to the Scripture tab, scroll the matching verse element into
+  // view, and briefly mark it active. The verse element id matches
+  // `act-<chapter>-<verse>`.
+  const handleOpenVerse = useCallback((chapter: number, verse: number) => {
+    setShowTeaching(false); // Switch left pane to Scripture
+    const verseId = `act-${chapter}-${verse}`;
+    setActiveVerseId(verseId);
+    // Give the Scripture pane a tick to render, then scroll the verse
+    // element to the middle of its container.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = document.getElementById(verseId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
+  }, []);
+
   // Locations currently in scope (filtered by active panel/chapter)
   const visibleLocations = useMemo(() => {
     if (data.status !== 'ready') return [];
@@ -206,6 +225,8 @@ export default function App() {
             activeJourney={activeJourney}
             onJourneySelect={setActiveJourney}
             activePanel={activePanel}
+            activeVerseId={activeVerseId}
+            onOpenVerse={handleOpenVerse}
           />
         </div>
       </main>
