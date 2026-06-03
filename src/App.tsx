@@ -10,6 +10,7 @@ import { ScripturePane } from './components/ScripturePane';
 import { MapPane } from './components/MapPane';
 import { TeachingPane } from './components/TeachingPane';
 import { TimelineBar } from './components/TimelineBar';
+import { TimelineView } from './components/TimelineView';
 import { useT, DICTIONARIES, type LangCode } from './i18n/LanguageContext';
 
 type LoadState =
@@ -28,6 +29,7 @@ export default function App() {
   const [activeVerseId, setActiveVerseId] = useState<string | null>(null);
   const [showTeaching, setShowTeaching] = useState(true);
   const [activeJourney, setActiveJourney] = useState<string | null>(null);
+  const [timelineOpen, setTimelineOpen] = useState(false);
 
   // Keep the browser tab title in the active language.
   useEffect(() => {
@@ -82,6 +84,11 @@ export default function App() {
       });
     });
   }, []);
+
+  // Jump straight to a chapter from the full-timeline overlay.
+  const handleOpenChapter = useCallback((chapter: number) => {
+    handleOpenVerse(chapter, 1);
+  }, [handleOpenVerse]);
 
   // Locations currently in scope (filtered by active panel/chapter)
   const visibleLocations = useMemo(() => {
@@ -237,6 +244,16 @@ export default function App() {
         activePanel={activePanel}
         onPanelSelect={setActivePanel}
         onJourneySelect={setActiveJourney}
+        onExpand={() => setTimelineOpen(true)}
+      />
+
+      <TimelineView
+        open={timelineOpen}
+        onClose={() => setTimelineOpen(false)}
+        activePanel={activePanel}
+        onPanelSelect={setActivePanel}
+        onJourneySelect={setActiveJourney}
+        onOpenChapter={handleOpenChapter}
       />
 
       {/* Footer — Scripture credit changes by language.

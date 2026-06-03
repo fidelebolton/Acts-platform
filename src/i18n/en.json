@@ -95,7 +95,40 @@
       "silversmiths-riot":  { "title": "Riot of the silversmiths",   "blurb": "Artemis vs. the kingdom of God." },
       "paul-arrested":      { "title": "Paul arrested in Jerusalem", "blurb": "The journey from freedom to chains begins." },
       "voyage-to-rome":     { "title": "Voyage to Rome",             "blurb": "Storm, shipwreck, Malta." },
-      "house-arrest":       { "title": "Rome — house arrest",        "blurb": "\"Preaching the kingdom… unhindered.\"" }
+      "house-arrest":       { "title": "Rome — house arrest",        "blurb": "\"Preaching the kingdom… unhindered.\"" },
+      "first-jerusalem-visit": { "title": "First Jerusalem visit",   "blurb": "Three years after Damascus — fifteen days with Peter." },
+      "famine-relief":      { "title": "Famine-relief visit",        "blurb": "Antioch sends aid to Judea by Barnabas and Saul." },
+      "corinth-gallio":     { "title": "Corinth — before Gallio",    "blurb": "The proconsul throws the case out — legal cover for the gospel." },
+      "caesarea-prison":    { "title": "Caesarea — held two years",  "blurb": "Felix leaves Paul in chains; Festus inherits the case." }
+    }
+  },
+  "timelineView": {
+    "open": "Full timeline",
+    "openHint": "See how the years unfold",
+    "title": "The Acts Timeline",
+    "subtitle": "From Pentecost to Rome — drawn to scale, so you can see how much time passed.",
+    "scaleNote": "Taller gaps mean more time passed; dates are approximate scholarly consensus",
+    "close": "Close",
+    "jumpHint": "tap any event to open that chapter",
+    "later": {
+      "sameYear": "later that same year",
+      "year": "≈ 1 year later",
+      "years": "≈ {n} years later"
+    },
+    "prologue": {
+      "heading": "The first fifty days",
+      "scaleTag": "counted in days — not to scale",
+      "resurrection": "Resurrection",
+      "resurrectionNote": "Passover · AD 30",
+      "appearances": "40 days — the risen Jesus appears (Acts 1:3)",
+      "waiting": "10 days — waiting and prayer in Jerusalem (Acts 1:14)",
+      "pentecost": "Pentecost — 50 days after Passover (Acts 2)"
+    },
+    "durations": {
+      "corinth-gallio": "18 months in Corinth",
+      "third-journey": "≈ 3 years in Ephesus",
+      "caesarea-prison": "2 years imprisoned at Caesarea",
+      "house-arrest": "2 years under house arrest"
     }
   }
 }

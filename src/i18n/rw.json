@@ -95,7 +95,40 @@
       "silversmiths-riot":  { "title": "Imvururu z'abacuzi b'ifeza",       "blurb": "Aritemi na Ubwami bw'Imana." },
       "paul-arrested":      { "title": "Pawulo afatirwa i Yerusalemu",     "blurb": "Urugendo ruva mu bwisanzure rujya mu minyururu." },
       "voyage-to-rome":     { "title": "Urugendo rwo mu bwato ajya i Roma","blurb": "Inkubi, ubwato bwaracitse, Malta." },
-      "house-arrest":       { "title": "Roma — kuboshwa mu rugo",          "blurb": "\"Akabwiriza ubwami… nta nkomyi.\"" }
+      "house-arrest":       { "title": "Roma — kuboshwa mu rugo",          "blurb": "\"Akabwiriza ubwami… nta nkomyi.\"" },
+      "first-jerusalem-visit": { "title": "Urugendo rwa mbere i Yerusalemu", "blurb": "Imyaka itatu nyuma ya Damasiko — iminsi cumi n'itanu kumwe na Petero." },
+      "famine-relief":      { "title": "Urugendo rwo gutabara inzara",   "blurb": "Antiyokiya yohereje imfashanyo i Yudaya binyuze kuri Barinaba na Sawuli." },
+      "corinth-gallio":     { "title": "Korinto — imbere ya Galiyo",      "blurb": "Guverineri yanze ikirego — ubuhungiro bw'amategeko ku butumwa." },
+      "caesarea-prison":    { "title": "Kayisariya — afungwa imyaka ibiri","blurb": "Felikisi areka Pawulo mu minyururu; Fesito ahererekanya urubanza." }
+    }
+  },
+  "timelineView": {
+    "open": "Urutonde rw'igihe",
+    "openHint": "Reba uko imyaka yagiye ihita",
+    "title": "Urutonde rw'igihe cy'Ibyakozwe",
+    "subtitle": "Kuva kuri Pentekositi kugeza i Roma — bishushanyije ku gipimo, kugira ngo ubone igihe cyashize.",
+    "scaleNote": "Icyuho kinini bivuga igihe kirekire cyashize; amatariki ni ay'agereranyo",
+    "close": "Funga",
+    "jumpHint": "kanda igikorwa cyose kugira ngo ufungure icyo gice",
+    "later": {
+      "sameYear": "muri uwo mwaka nyine",
+      "year": "≈ umwaka 1 nyuma",
+      "years": "≈ imyaka {n} nyuma"
+    },
+    "prologue": {
+      "heading": "Iminsi 50 ya mbere",
+      "scaleTag": "ibarwa mu minsi — atari ku gipimo",
+      "resurrection": "Umuzuko",
+      "resurrectionNote": "Pasika · AD 30",
+      "appearances": "Iminsi 40 — Yesu wazutse ariyereka (Ibyakozwe 1:3)",
+      "waiting": "Iminsi 10 — gutegereza no gusenga i Yerusalemu (Ibyakozwe 1:14)",
+      "pentecost": "Pentekositi — iminsi 50 nyuma ya Pasika (Ibyakozwe 2)"
+    },
+    "durations": {
+      "corinth-gallio": "Amezi 18 i Korinto",
+      "third-journey": "≈ imyaka 3 i Efeso",
+      "caesarea-prison": "Imyaka 2 afungiwe i Kayisariya",
+      "house-arrest": "Imyaka 2 aboshywe mu rugo"
     }
   }
 }

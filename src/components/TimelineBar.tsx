@@ -7,6 +7,7 @@ interface Props {
   activePanel: Panel['id'];
   onPanelSelect: (id: Panel['id']) => void;
   onJourneySelect: (id: string | null) => void;
+  onExpand: () => void;
 }
 
 // Major chronological milestones in Acts. Dates are approximate scholarly
@@ -32,24 +33,24 @@ interface TimelineMeta {
 }
 
 const TIMELINE_EVENTS: TimelineMeta[] = [
-  { id: 'pentecost',          year: 'AD 30', panel: 1, chapter: 2 },
-  { id: 'stephen-martyred',   year: 'AD 31', panel: 1, chapter: 7 },
-  { id: 'saul-converted',     year: 'AD 33', panel: 2, chapter: 9 },
-  { id: 'cornelius',          year: 'AD 36', panel: 3, chapter: 10 },
-  { id: 'herod-dies',         year: 'AD 44', panel: 3, chapter: 12 },
-  { id: 'first-journey',      year: 'AD 46', panel: 4, chapter: 13, journey: 'journey-1' },
-  { id: 'jerusalem-council',  year: 'AD 49', panel: 4, chapter: 15 },
-  { id: 'second-journey',     year: 'AD 49', panel: 5, chapter: 15, journey: 'journey-2' },
-  { id: 'macedonian-vision',  year: 'AD 50', panel: 5, chapter: 16 },
-  { id: 'areopagus-sermon',   year: 'AD 51', panel: 5, chapter: 17 },
-  { id: 'third-journey',      year: 'AD 53', panel: 5, chapter: 18, journey: 'journey-3' },
-  { id: 'silversmiths-riot',  year: 'AD 56', panel: 5, chapter: 19 },
-  { id: 'paul-arrested',      year: 'AD 57', panel: 6, chapter: 21 },
-  { id: 'voyage-to-rome',     year: 'AD 59', panel: 6, chapter: 27, journey: 'journey-4' },
-  { id: 'house-arrest',       year: 'AD 60', panel: 6, chapter: 28 },
+  { id: 'pentecost', year: 'AD 30', panel: 1, chapter: 2 },
+  { id: 'stephen-martyred', year: 'AD 34', panel: 2, chapter: 7 },
+  { id: 'saul-converted', year: 'AD 35', panel: 2, chapter: 9 },
+  { id: 'cornelius', year: 'AD 40', panel: 3, chapter: 10 },
+  { id: 'herod-dies', year: 'AD 44', panel: 3, chapter: 12 },
+  { id: 'first-journey', year: 'AD 47', panel: 4, chapter: 13, journey: 'journey-1' },
+  { id: 'jerusalem-council', year: 'AD 49', panel: 4, chapter: 15 },
+  { id: 'second-journey', year: 'AD 49', panel: 5, chapter: 16, journey: 'journey-2' },
+  { id: 'macedonian-vision', year: 'AD 50', panel: 5, chapter: 16 },
+  { id: 'areopagus-sermon', year: 'AD 50', panel: 5, chapter: 17 },
+  { id: 'third-journey', year: 'AD 53', panel: 5, chapter: 19, journey: 'journey-3' },
+  { id: 'silversmiths-riot', year: 'AD 56', panel: 5, chapter: 19 },
+  { id: 'paul-arrested', year: 'AD 58', panel: 6, chapter: 21 },
+  { id: 'voyage-to-rome', year: 'AD 60', panel: 6, chapter: 27, journey: 'journey-4' },
+  { id: 'house-arrest', year: 'AD 61', panel: 6, chapter: 28 },
 ];
 
-export function TimelineBar({ activePanel, onPanelSelect, onJourneySelect }: Props) {
+export function TimelineBar({ activePanel, onPanelSelect, onJourneySelect, onExpand }: Props) {
   const { t } = useT();
   const events = TIMELINE_EVENTS;
 
@@ -73,9 +74,13 @@ export function TimelineBar({ activePanel, onPanelSelect, onJourneySelect }: Pro
           <div className="text-[10px] uppercase tracking-widest text-navy/60 font-bold">
             {t.timeline.header}
           </div>
-          <div className="text-[10px] text-navy/50 italic">
-            {t.timeline.hint}
-          </div>
+          <button
+            onClick={onExpand}
+            className="text-[10px] uppercase tracking-widest font-bold text-gold-dark hover:text-navy transition-colors flex items-center gap-1"
+          >
+            {t.timelineView.open}
+            <span aria-hidden="true">↗</span>
+          </button>
         </div>
 
         <div className="relative h-14">
