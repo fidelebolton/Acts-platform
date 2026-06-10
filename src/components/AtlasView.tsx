@@ -17,14 +17,18 @@ interface Props {
  * The Acts Atlas — a collection of maps, one per key figure.
  * Full-screen overlay: pick a person, see their whole life traced on its
  * own map (birth ★, numbered ministry stops, martyrdom †, tradition ◆)
- * with a life-story panel listing every event, reference, and detail.
+ * with a to-scale life TIMELINE and a life-story panel. All three views
+ * interact: tap a year on the timeline, a marker on the map, or an event
+ * in the story — the other two follow.
  */
 export function AtlasView({ open, onClose, onOpenVerse }: Props) {
   const { t, fmt, lang } = useT();
   const [figureId, setFigureId] = useState<AtlasFigureId>('peter');
+  const [activeSeq, setActiveSeq] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const popupRef = useRef<Popup | null>(null);
+  const itemRefs = useRef<Record<number, HTMLLIElement | null>>({});
   const [mapReady, setMapReady] = useState(false);
 
   const figure = useMemo(
@@ -43,6 +47,9 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
     langRef.current = lang;
   }, [figure, t, lang]);
 
+  // New leader → fresh page of the atlas.
+  useEffect(() => { setActiveSeq(null); }, [figureId]);
+
   // Esc closes the atlas.
   useEffect(() => {
     if (!open) return;
@@ -51,7 +58,7 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  /** Build + open the popup for one life event (shared by list & map). */
+  /** Build + open the popup for one life event (shared by all views). */
   const openEventPopup = (e: AtlasEvent) => {
     const map = mapRef.current;
     if (!map) return;
@@ -67,9 +74,10 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
     popupRef.current = new maplibregl.Popup({ offset: 16, maxWidth: '320px' })
       .setLngLat([e.lon, e.lat])
       .setHTML(`
-        <div class="text-xs uppercase tracking-wider font-bold" style="color:${fig.color}">${e.seq}. ${escapeHtml(kindLabel)}</div>
+        <div class="text-xs uppercase tracking-wider font-bold" style="color:${fig.color}">${e.seq}. ${escapeHtml(kindLabel)} · ${escapeHtml(e.yearLabel)}</div>
         <div class="font-heading text-base text-navy font-semibold">${escapeHtml(title)}</div>
         <div class="text-xs text-navy/70 italic">${escapeHtml(place)} · ${escapeHtml(ref)}</div>
+        <div class="text-xs text-navy/60">${escapeHtml(tt.map.popupToday)}: <strong>${escapeHtml(e.modern)}</strong></div>
         <div class="text-xs text-navy/80 mt-1.5 max-w-[280px] leading-relaxed">${escapeHtml(note)}</div>
         ${e.chapter > 0 ? `<button data-jump-verse data-chapter="${e.chapter}" data-verse="${e.verse}" class="mt-1.5 text-[11px] text-gold-dark hover:text-navy font-bold cursor-pointer">${escapeHtml(tt.map.jumpToVerse)}</button>` : ''}
       `)
@@ -86,8 +94,19 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
       });
     }
   };
-  const openEventPopupRef = useRef(openEventPopup);
-  useEffect(() => { openEventPopupRef.current = openEventPopup; });
+
+  /** Fly to an event + open its popup + sync the timeline and the story
+   *  panel. One function shared by all three views. */
+  const flyToEvent = (e: AtlasEvent) => {
+    const map = mapRef.current;
+    if (!map) return;
+    setActiveSeq(e.seq);
+    itemRefs.current[e.seq]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    map.flyTo({ center: [e.lon, e.lat], zoom: Math.max(map.getZoom(), 5.5), duration: 1000, essential: true });
+    openEventPopup(e);
+  };
+  const flyToEventRef = useRef(flyToEvent);
+  useEffect(() => { flyToEventRef.current = flyToEvent; });
 
   // Create the map when the atlas opens; tear it down when it closes.
   useEffect(() => {
@@ -107,7 +126,6 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
       });
-      // The life path — a single curved line through the events in order.
       map.addLayer({
         id: 'life-path',
         type: 'line',
@@ -151,7 +169,6 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
           'text-halo-width': 1.2,
         },
       });
-      // ★ birth · † martyrdom · ◆ tradition — drawn above the circle.
       map.addLayer({
         id: 'life-glyphs',
         type: 'symbol',
@@ -195,7 +212,7 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
         if (!feat) return;
         const seq = Number((feat.properties as { seq: string }).seq);
         const ev = figureRef.current.events.find(x => x.seq === seq);
-        if (ev) openEventPopupRef.current(ev);
+        if (ev) flyToEventRef.current(ev);
       });
       map.on('mouseenter', 'life-stops', () => map.getCanvas().style.cursor = 'pointer');
       map.on('mouseleave', 'life-stops', () => map.getCanvas().style.cursor = '');
@@ -214,7 +231,7 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
   }, [open]);
 
   // Load the selected figure's life onto the map (re-runs on language
-  // switch so labels and popup-feeding properties stay localized).
+  // switch so labels stay localized).
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
@@ -222,10 +239,6 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
     if (!source) return;
 
     const rw = lang === 'rw';
-    const glyphFor = (k: AtlasEvent['kind']) =>
-      k === 'birth' ? '★' : k === 'martyrdom' ? '†' : k === 'tradition' ? '◆' : '';
-
-    // Curved path through the events in life order.
     const pathCoords: [number, number][] = [];
     for (let i = 0; i < figure.events.length - 1; i++) {
       const a: [number, number] = [figure.events[i].lon, figure.events[i].lat];
@@ -256,7 +269,6 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
     source.setData({ type: 'FeatureCollection', features });
     popupRef.current?.remove();
 
-    // Fit the whole life on screen.
     let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
     for (const e of figure.events) {
       minLon = Math.min(minLon, e.lon); maxLon = Math.max(maxLon, e.lon);
@@ -269,12 +281,13 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
     });
   }, [figure, mapReady, lang]);
 
-  const flyToEvent = (e: AtlasEvent) => {
-    const map = mapRef.current;
-    if (!map) return;
-    map.flyTo({ center: [e.lon, e.lat], zoom: Math.max(map.getZoom(), 5.5), duration: 1000, essential: true });
-    openEventPopup(e);
-  };
+  // ─── Life timeline (to scale) ───────────────────────────────────────
+  const minYear = Math.min(...figure.events.map(e => e.year));
+  const maxYear = Math.max(...figure.events.map(e => e.year));
+  const yearSpan = Math.max(1, maxYear - minYear);
+  const timelinePct = (y: number) => `${3 + ((y - minYear) / yearSpan) * 94}%`;
+  const decadeTicks: number[] = [];
+  for (let d = Math.ceil(minYear / 10) * 10; d <= maxYear; d += 10) decadeTicks.push(d);
 
   if (!open) return null;
 
@@ -314,14 +327,66 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
         ))}
       </div>
 
+      {/* Life timeline — to scale. Tap a year: the map and the story follow. */}
+      <div className="border-b border-cream-dark bg-cream-warm/50 px-4 md:px-8 pt-2 pb-1">
+        <div className="flex items-baseline justify-between">
+          <span className="text-[10px] uppercase tracking-widest text-navy/50 font-bold">
+            {t.atlas.timelineLabel}
+          </span>
+          <span className="text-[10px] text-navy/40">{t.atlas.timelineHint}</span>
+        </div>
+        <div className="overflow-x-auto">
+          <div className="relative h-[76px] mt-1 min-w-[560px]">
+            {/* axis */}
+            <div className="absolute left-[2%] right-[2%] top-[30px] h-px bg-navy/20" />
+            {/* decade ticks */}
+            {decadeTicks.map(d => (
+              <div key={d} className="absolute -translate-x-1/2 text-center" style={{ left: timelinePct(d), top: '24px' }}>
+                <div className="w-px h-3 bg-navy/15 mx-auto" />
+                <div className="text-[9px] text-navy/35 mt-[26px]">AD {d}</div>
+              </div>
+            ))}
+            {/* events */}
+            {figure.events.map((e, i) => (
+              <button
+                key={e.seq}
+                onClick={() => flyToEvent(e)}
+                className="absolute -translate-x-1/2 flex flex-col items-center group"
+                style={{ left: timelinePct(e.year), top: 0 }}
+                aria-label={`${e.seq}. ${isRw ? e.title_rw : e.title} (${e.yearLabel})`}
+              >
+                <span className="h-[10px] text-[12px] leading-none text-gold-dark" aria-hidden="true">
+                  {glyphFor(e.kind)}
+                </span>
+                <span
+                  className={`w-[19px] h-[19px] rounded-full text-[9px] font-bold text-cream flex items-center justify-center border-2 transition-transform ${
+                    activeSeq === e.seq ? 'border-gold scale-125' : 'border-cream group-hover:scale-110'
+                  }`}
+                  style={{ background: figure.color }}
+                >
+                  {e.seq}
+                </span>
+                <span
+                  className={`text-[9px] whitespace-nowrap leading-none ${i % 2 === 1 ? 'mt-[15px]' : 'mt-[3px]'} ${
+                    activeSeq === e.seq ? 'text-navy font-bold' : 'text-navy/55'
+                  }`}
+                >
+                  {e.yearLabel}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Map + life story */}
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-        <div className="relative flex-1 min-h-[42vh]">
+        <div className="relative flex-1 min-h-[38vh]">
           <div ref={containerRef} className="absolute inset-0" />
         </div>
 
-        <aside className="lg:w-[380px] lg:min-w-[340px] border-t lg:border-t-0 lg:border-l border-cream-dark bg-cream-warm/40 overflow-y-auto max-h-[42vh] lg:max-h-none">
-          <div className="px-4 py-3 border-b border-cream-dark bg-cream-warm/70 sticky top-0 backdrop-blur">
+        <aside className="lg:w-[380px] lg:min-w-[340px] border-t lg:border-t-0 lg:border-l border-cream-dark bg-cream-warm/40 overflow-y-auto max-h-[38vh] lg:max-h-none">
+          <div className="px-4 py-3 border-b border-cream-dark bg-cream-warm/70 sticky top-0 backdrop-blur z-10">
             <div className="text-xs uppercase tracking-widest font-bold" style={{ color: figure.color }}>
               {fmt(t.atlas.lifeOf, { name: isRw ? figure.name_rw : figure.name })}
             </div>
@@ -335,10 +400,14 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
           </div>
           <ol className="px-3 pb-6 pt-1 flex flex-col gap-1">
             {figure.events.map(e => (
-              <li key={e.seq}>
+              <li key={e.seq} ref={el => { itemRefs.current[e.seq] = el; }}>
                 <button
                   onClick={() => flyToEvent(e)}
-                  className="w-full text-left rounded-lg border border-transparent hover:border-gold hover:bg-cream px-2.5 py-2 transition-colors"
+                  className={`w-full text-left rounded-lg border px-2.5 py-2 transition-colors ${
+                    activeSeq === e.seq
+                      ? 'border-gold bg-cream'
+                      : 'border-transparent hover:border-gold hover:bg-cream'
+                  }`}
                 >
                   <div className="flex items-baseline gap-2">
                     <span
@@ -349,16 +418,18 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
                     </span>
                     <span className="text-[13px] font-semibold text-navy leading-snug">
                       {e.kind !== 'ministry' && (
-                        <span className="text-gold-dark mr-1" aria-hidden="true">
-                          {e.kind === 'birth' ? '★' : e.kind === 'martyrdom' ? '†' : '◆'}
-                        </span>
+                        <span className="text-gold-dark mr-1" aria-hidden="true">{glyphFor(e.kind)}</span>
                       )}
                       {isRw ? e.title_rw : e.title}
                     </span>
+                    <span className="ml-auto shrink-0 text-[10px] text-navy/50 font-semibold">{e.yearLabel}</span>
                   </div>
                   <div className="pl-7 text-[11px] text-navy/60">
                     {isRw ? e.place_rw : e.place} · {e.ref.replace(/^Acts\b/, t.scripture.chapterPrefix)}
                     {e.kind !== 'ministry' && <> · {t.atlas.kind[e.kind]}</>}
+                  </div>
+                  <div className="pl-7 text-[11px] text-navy/50">
+                    {t.map.popupToday}: {e.modern}
                   </div>
                   <div className="pl-7 text-[12px] text-navy/80 leading-snug mt-0.5">
                     {isRw ? e.note_rw : e.note}
@@ -371,6 +442,10 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
       </div>
     </div>
   );
+}
+
+function glyphFor(k: AtlasEvent['kind']) {
+  return k === 'birth' ? '★' : k === 'martyrdom' ? '†' : k === 'tradition' ? '◆' : '';
 }
 
 function escapeHtml(s: string | number) {

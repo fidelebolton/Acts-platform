@@ -221,6 +221,8 @@
       "ministry": "Ministry",
       "martyrdom": "Martyrdom",
       "tradition": "Church tradition"
-    }
+    },
+    "timelineLabel": "His life in time — drawn to scale",
+    "timelineHint": "tap a year — the map and the story follow"
   }
 }
