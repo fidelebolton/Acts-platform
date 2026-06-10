@@ -1301,7 +1301,7 @@ function curveJourneys(jc: JourneysCollection): JourneysCollection {
  *  perpendicular to the segment midpoint, `bow` × segment-length away.
  *  Returns points from a up to (but not including) b, so consecutive
  *  segments chain without duplicates. */
-function curveSegment(
+export function curveSegment(
   a: [number, number],
   b: [number, number],
   bow: number,

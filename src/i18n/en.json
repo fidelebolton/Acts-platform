@@ -102,25 +102,82 @@
     "header": "Chronology · AD 30 → AD 62",
     "hint": "Click any event to jump there",
     "events": {
-      "pentecost":          { "title": "Pentecost",                  "blurb": "The Spirit is poured out; 3,000 believe." },
-      "stephen-martyred":   { "title": "Stephen martyred",           "blurb": "First Christian martyr — the church scatters." },
-      "saul-converted":     { "title": "Saul converted",             "blurb": "On the road to Damascus." },
-      "cornelius":          { "title": "Cornelius and his household", "blurb": "The gospel breaks the Jew/Gentile wall." },
-      "herod-dies":         { "title": "Herod Agrippa I dies",       "blurb": "Persecution stops — the word multiplies." },
-      "first-journey":      { "title": "First Journey begins",       "blurb": "Antioch sends Paul and Barnabas." },
-      "jerusalem-council":  { "title": "Jerusalem Council",          "blurb": "Gentiles are saved by grace, not law." },
-      "second-journey":     { "title": "Second Journey begins",      "blurb": "Paul, Silas, Timothy — Europe opens." },
-      "macedonian-vision":  { "title": "Macedonian Vision",          "blurb": "\"Come over to Macedonia and help us.\"" },
-      "areopagus-sermon":   { "title": "Areopagus Sermon",           "blurb": "The unknown God made known in Athens." },
-      "third-journey":      { "title": "Third Journey begins",       "blurb": "Ephesus — three years of fruit." },
-      "silversmiths-riot":  { "title": "Riot of the silversmiths",   "blurb": "Artemis vs. the kingdom of God." },
-      "paul-arrested":      { "title": "Paul arrested in Jerusalem", "blurb": "The journey from freedom to chains begins." },
-      "voyage-to-rome":     { "title": "Voyage to Rome",             "blurb": "Storm, shipwreck, Malta." },
-      "house-arrest":       { "title": "Rome — house arrest",        "blurb": "\"Preaching the kingdom… unhindered.\"" },
-      "first-jerusalem-visit": { "title": "First Jerusalem visit",   "blurb": "Three years after Damascus — fifteen days with Peter." },
-      "famine-relief":      { "title": "Famine-relief visit",        "blurb": "Antioch sends aid to Judea by Barnabas and Saul." },
-      "corinth-gallio":     { "title": "Corinth — before Gallio",    "blurb": "The proconsul throws the case out — legal cover for the gospel." },
-      "caesarea-prison":    { "title": "Caesarea — held two years",  "blurb": "Felix leaves Paul in chains; Festus inherits the case." }
+      "pentecost": {
+        "title": "Pentecost",
+        "blurb": "The Spirit is poured out; 3,000 believe."
+      },
+      "stephen-martyred": {
+        "title": "Stephen martyred",
+        "blurb": "First Christian martyr — the church scatters."
+      },
+      "saul-converted": {
+        "title": "Saul converted",
+        "blurb": "On the road to Damascus."
+      },
+      "cornelius": {
+        "title": "Cornelius and his household",
+        "blurb": "The gospel breaks the Jew/Gentile wall."
+      },
+      "herod-dies": {
+        "title": "Herod Agrippa I dies",
+        "blurb": "Persecution stops — the word multiplies."
+      },
+      "first-journey": {
+        "title": "First Journey begins",
+        "blurb": "Antioch sends Paul and Barnabas."
+      },
+      "jerusalem-council": {
+        "title": "Jerusalem Council",
+        "blurb": "Gentiles are saved by grace, not law."
+      },
+      "second-journey": {
+        "title": "Second Journey begins",
+        "blurb": "Paul, Silas, Timothy — Europe opens."
+      },
+      "macedonian-vision": {
+        "title": "Macedonian Vision",
+        "blurb": "\"Come over to Macedonia and help us.\""
+      },
+      "areopagus-sermon": {
+        "title": "Areopagus Sermon",
+        "blurb": "The unknown God made known in Athens."
+      },
+      "third-journey": {
+        "title": "Third Journey begins",
+        "blurb": "Ephesus — three years of fruit."
+      },
+      "silversmiths-riot": {
+        "title": "Riot of the silversmiths",
+        "blurb": "Artemis vs. the kingdom of God."
+      },
+      "paul-arrested": {
+        "title": "Paul arrested in Jerusalem",
+        "blurb": "The journey from freedom to chains begins."
+      },
+      "voyage-to-rome": {
+        "title": "Voyage to Rome",
+        "blurb": "Storm, shipwreck, Malta."
+      },
+      "house-arrest": {
+        "title": "Rome — house arrest",
+        "blurb": "\"Preaching the kingdom… unhindered.\""
+      },
+      "first-jerusalem-visit": {
+        "title": "First Jerusalem visit",
+        "blurb": "Three years after Damascus — fifteen days with Peter."
+      },
+      "famine-relief": {
+        "title": "Famine-relief visit",
+        "blurb": "Antioch sends aid to Judea by Barnabas and Saul."
+      },
+      "corinth-gallio": {
+        "title": "Corinth — before Gallio",
+        "blurb": "The proconsul throws the case out — legal cover for the gospel."
+      },
+      "caesarea-prison": {
+        "title": "Caesarea — held two years",
+        "blurb": "Felix leaves Paul in chains; Festus inherits the case."
+      }
     }
   },
   "timelineView": {
@@ -150,6 +207,20 @@
       "third-journey": "≈ 3 years in Ephesus",
       "caesarea-prison": "2 years imprisoned at Caesarea",
       "house-arrest": "2 years under house arrest"
+    }
+  },
+  "atlas": {
+    "open": "Atlas",
+    "title": "The Acts Atlas",
+    "subtitle": "A collection of maps — follow each witness: where he was born, where he ministered, and how his story ends.",
+    "close": "Close",
+    "hint": "Tap any event — the map flies there",
+    "lifeOf": "The life of {name}",
+    "kind": {
+      "birth": "Birthplace",
+      "ministry": "Ministry",
+      "martyrdom": "Martyrdom",
+      "tradition": "Church tradition"
     }
   }
 }

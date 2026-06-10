@@ -11,6 +11,7 @@ import { MapPane } from './components/MapPane';
 import { TeachingPane } from './components/TeachingPane';
 import { TimelineBar } from './components/TimelineBar';
 import { TimelineView } from './components/TimelineView';
+import { AtlasView } from './components/AtlasView';
 import { useT, DICTIONARIES, type LangCode } from './i18n/LanguageContext';
 
 type LoadState =
@@ -30,6 +31,7 @@ export default function App() {
   const [showTeaching, setShowTeaching] = useState(true);
   const [activeJourney, setActiveJourney] = useState<string | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [atlasOpen, setAtlasOpen] = useState(false);
 
   // Keep the browser tab title in the active language.
   useEffect(() => {
@@ -161,6 +163,15 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Atlas — one map per key figure of Acts */}
+            <button
+              onClick={() => setAtlasOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-gold bg-gold/10 text-navy hover:bg-gold/25 transition-colors"
+            >
+              <span aria-hidden="true">🧭</span>
+              {t.atlas.open}
+            </button>
+
             {/* Language selector */}
             <label className="flex items-center gap-1.5 text-xs text-navy/70">
               <span className="sr-only">{t.app.languageLabel}</span>
@@ -255,6 +266,12 @@ export default function App() {
         onPanelSelect={setActivePanel}
         onJourneySelect={setActiveJourney}
         onOpenChapter={handleOpenChapter}
+      />
+
+      <AtlasView
+        open={atlasOpen}
+        onClose={() => setAtlasOpen(false)}
+        onOpenVerse={handleOpenVerse}
       />
 
       {/* Footer — Scripture credit changes by language.

@@ -102,25 +102,82 @@
     "header": "Imyaka · AD 30 → AD 62",
     "hint": "Kanda kuri buri gikorwa ujye aho",
     "events": {
-      "pentecost":          { "title": "Pentekositi",                       "blurb": "Umwuka arasukwa; abantu 3.000 baremera." },
-      "stephen-martyred":   { "title": "Stefano apfira ukwemera",           "blurb": "Umumartira wa mbere — Itorero ritatana." },
-      "saul-converted":     { "title": "Sawuli arahindurwa",                "blurb": "Mu nzira ya Damasiko." },
-      "cornelius":          { "title": "Kornelio n'urugo rwe",              "blurb": "Ubutumwa busenya urukuta hagati y'Abayahudi n'Abanyamahanga." },
-      "herod-dies":         { "title": "Herode Agripa wa I arapfa",         "blurb": "Iyicwa rirahagarara — ijambo ririyongera." },
-      "first-journey":      { "title": "Urugendo rwa mbere rutangira",     "blurb": "Antiyokiya yohereje Pawulo na Barinaba." },
-      "jerusalem-council":  { "title": "Inama ya Yerusalemu",               "blurb": "Abanyamahanga bakizwa n'ubuntu, atari amategeko." },
-      "second-journey":     { "title": "Urugendo rwa kabiri rutangira",    "blurb": "Pawulo, Sila, Timoteyo — Uburayi burafungurwa." },
-      "macedonian-vision":  { "title": "Iyerekwa rya Makedoniya",           "blurb": "\"Ngwino i Makedoniya udufashe.\"" },
-      "areopagus-sermon":   { "title": "Inyigisho ya Aleopago",             "blurb": "Imana itazwi imenyekanishwa i Atene." },
-      "third-journey":      { "title": "Urugendo rwa gatatu rutangira",    "blurb": "Efeso — imyaka itatu y'imbuto." },
-      "silversmiths-riot":  { "title": "Imvururu z'abacuzi b'ifeza",       "blurb": "Aritemi na Ubwami bw'Imana." },
-      "paul-arrested":      { "title": "Pawulo afatirwa i Yerusalemu",     "blurb": "Urugendo ruva mu bwisanzure rujya mu minyururu." },
-      "voyage-to-rome":     { "title": "Urugendo rwo mu bwato ajya i Roma","blurb": "Inkubi, ubwato bwaracitse, Malta." },
-      "house-arrest":       { "title": "Roma — kuboshwa mu rugo",          "blurb": "\"Akabwiriza ubwami… nta nkomyi.\"" },
-      "first-jerusalem-visit": { "title": "Urugendo rwa mbere i Yerusalemu", "blurb": "Imyaka itatu nyuma ya Damasiko — iminsi cumi n'itanu kumwe na Petero." },
-      "famine-relief":      { "title": "Urugendo rwo gutabara inzara",   "blurb": "Antiyokiya yohereje imfashanyo i Yudaya binyuze kuri Barinaba na Sawuli." },
-      "corinth-gallio":     { "title": "Korinto — imbere ya Galiyo",      "blurb": "Guverineri yanze ikirego — ubuhungiro bw'amategeko ku butumwa." },
-      "caesarea-prison":    { "title": "Kayisariya — afungwa imyaka ibiri","blurb": "Felikisi areka Pawulo mu minyururu; Fesito ahererekanya urubanza." }
+      "pentecost": {
+        "title": "Pentekositi",
+        "blurb": "Umwuka arasukwa; abantu 3.000 baremera."
+      },
+      "stephen-martyred": {
+        "title": "Stefano apfira ukwemera",
+        "blurb": "Umumartira wa mbere — Itorero ritatana."
+      },
+      "saul-converted": {
+        "title": "Sawuli arahindurwa",
+        "blurb": "Mu nzira ya Damasiko."
+      },
+      "cornelius": {
+        "title": "Kornelio n'urugo rwe",
+        "blurb": "Ubutumwa busenya urukuta hagati y'Abayahudi n'Abanyamahanga."
+      },
+      "herod-dies": {
+        "title": "Herode Agripa wa I arapfa",
+        "blurb": "Iyicwa rirahagarara — ijambo ririyongera."
+      },
+      "first-journey": {
+        "title": "Urugendo rwa mbere rutangira",
+        "blurb": "Antiyokiya yohereje Pawulo na Barinaba."
+      },
+      "jerusalem-council": {
+        "title": "Inama ya Yerusalemu",
+        "blurb": "Abanyamahanga bakizwa n'ubuntu, atari amategeko."
+      },
+      "second-journey": {
+        "title": "Urugendo rwa kabiri rutangira",
+        "blurb": "Pawulo, Sila, Timoteyo — Uburayi burafungurwa."
+      },
+      "macedonian-vision": {
+        "title": "Iyerekwa rya Makedoniya",
+        "blurb": "\"Ngwino i Makedoniya udufashe.\""
+      },
+      "areopagus-sermon": {
+        "title": "Inyigisho ya Aleopago",
+        "blurb": "Imana itazwi imenyekanishwa i Atene."
+      },
+      "third-journey": {
+        "title": "Urugendo rwa gatatu rutangira",
+        "blurb": "Efeso — imyaka itatu y'imbuto."
+      },
+      "silversmiths-riot": {
+        "title": "Imvururu z'abacuzi b'ifeza",
+        "blurb": "Aritemi na Ubwami bw'Imana."
+      },
+      "paul-arrested": {
+        "title": "Pawulo afatirwa i Yerusalemu",
+        "blurb": "Urugendo ruva mu bwisanzure rujya mu minyururu."
+      },
+      "voyage-to-rome": {
+        "title": "Urugendo rwo mu bwato ajya i Roma",
+        "blurb": "Inkubi, ubwato bwaracitse, Malta."
+      },
+      "house-arrest": {
+        "title": "Roma — kuboshwa mu rugo",
+        "blurb": "\"Akabwiriza ubwami… nta nkomyi.\""
+      },
+      "first-jerusalem-visit": {
+        "title": "Urugendo rwa mbere i Yerusalemu",
+        "blurb": "Imyaka itatu nyuma ya Damasiko — iminsi cumi n'itanu kumwe na Petero."
+      },
+      "famine-relief": {
+        "title": "Urugendo rwo gutabara inzara",
+        "blurb": "Antiyokiya yohereje imfashanyo i Yudaya binyuze kuri Barinaba na Sawuli."
+      },
+      "corinth-gallio": {
+        "title": "Korinto — imbere ya Galiyo",
+        "blurb": "Guverineri yanze ikirego — ubuhungiro bw'amategeko ku butumwa."
+      },
+      "caesarea-prison": {
+        "title": "Kayisariya — afungwa imyaka ibiri",
+        "blurb": "Felikisi areka Pawulo mu minyururu; Fesito ahererekanya urubanza."
+      }
     }
   },
   "timelineView": {
@@ -150,6 +207,20 @@
       "third-journey": "≈ imyaka 3 i Efeso",
       "caesarea-prison": "Imyaka 2 afungiwe i Kayisariya",
       "house-arrest": "Imyaka 2 aboshywe mu rugo"
+    }
+  },
+  "atlas": {
+    "open": "Atlasi",
+    "title": "Atlasi y'Ibyakozwe n'Intumwa",
+    "subtitle": "Ikusanyirizo ry'amakarita — kurikira buri muhamya: aho yavukiye, aho yakoreye umurimo, n'uko inkuru ye yarangiye.",
+    "close": "Funga",
+    "hint": "Kanda igikorwa icyo ari cyo cyose — ikarita irahaguruka",
+    "lifeOf": "Ubuzima bwa {name}",
+    "kind": {
+      "birth": "Aho yavukiye",
+      "ministry": "Umurimo",
+      "martyrdom": "Gupfira ukwemera",
+      "tradition": "Umugenzo w'Itorero"
     }
   }
 }
