@@ -59,6 +59,15 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
     return () => mql.removeEventListener('change', handler);
   }, []);
 
+  // De-cluttered rendering copy of the journeys data: every route is
+  // re-drawn as a gently curved arc whose bow direction/strength differs
+  // per journey, so journeys that share the same corridor (Jerusalem ↔
+  // Caesarea, Antioch ↔ Tarsus, …) fan apart instead of stacking into one
+  // unreadable line. Each feature is also tagged with the story panels it
+  // belongs to, so the map can emphasize the routes of the panel being
+  // read and ghost the rest. See curveJourneys() at the bottom of file.
+  const renderJourneys = useMemo(() => curveJourneys(journeys), [journeys]);
+
   // MapLibre click handlers are registered once and capture their closure.
   // Mirror the latest i18n strings into refs so popup HTML always renders
   // in the currently-selected language (even after the user switches).
@@ -121,7 +130,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
     popupRef.current = new maplibregl.Popup({ offset: 12, closeButton: true })
       .setLngLat([loc.lon, loc.lat])
       .setHTML(`
-        <div class="font-heading text-base text-navy font-semibold">${escapeHtml(loc.ancient_name)}</div>
+        <div class="font-heading text-base text-navy font-semibold">${escapeHtml(displayPlaceName(loc.ancient_name))}</div>
         <div class="text-xs text-navy/70 mb-1">${escapeHtml(tt.map.popupToday)}: <strong>${escapeHtml(loc.modern_name || '?')}</strong> · ${escapeHtml(loc.modern_country || '')}</div>
         <div class="text-xs text-navy/60">${escapeHtml(tt.map.popupAppearsIn)} ${escapeHtml(loc.chapters_in_acts.join(', '))}</div>
         ${firstCh > 0 ? `<button data-jump-verse data-chapter="${firstCh}" data-verse="${firstV}" class="mt-1.5 text-[11px] text-gold-dark hover:text-navy font-bold cursor-pointer">${escapeHtml(tt.map.jumpToVerse)}</button>` : ''}
@@ -217,7 +226,8 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
       geometry: { type: 'Point' as const, coordinates: [loc.lon, loc.lat] },
       properties: {
         id: loc.id,
-        ancient_name: loc.ancient_name,
+        // "Antioch 1" / "Antioch 2" (OpenBible disambiguators) → "Antioch"
+        ancient_name: displayPlaceName(loc.ancient_name),
         modern_name: loc.modern_name,
         modern_country: loc.modern_country,
         confidence_score: loc.confidence_score,
@@ -324,7 +334,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
     if (!map || !mapLoaded) return;
 
     if (!map.getSource('journeys')) {
-      map.addSource('journeys', { type: 'geojson', data: journeys as GeoJSON.FeatureCollection });
+      map.addSource('journeys', { type: 'geojson', data: renderJourneys as unknown as GeoJSON.FeatureCollection });
 
       // Route lines (only the LineString features)
       map.addLayer({
@@ -493,8 +503,10 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
 
       map.on('mouseenter', 'journey-stops', () => map.getCanvas().style.cursor = 'pointer');
       map.on('mouseleave', 'journey-stops', () => map.getCanvas().style.cursor = '');
+      map.on('mouseenter', 'journey-routes', () => map.getCanvas().style.cursor = 'pointer');
+      map.on('mouseleave', 'journey-routes', () => map.getCanvas().style.cursor = '');
     }
-  }, [journeys, mapLoaded]);
+  }, [renderJourneys, mapLoaded]);
 
   // Birthplaces of Paul (Tarsus) and Barnabas (Cyprus/Salamis) — gold
   // stars with permanent labels, always visible above the journey layers
@@ -583,38 +595,35 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
     ]);
   }, [t.birthplaces.paul.mapLabel, t.birthplaces.barnabas.mapLabel, mapLoaded]);
 
-  // Re-paint route emphasis + re-filter the numbered-pin and
-  // origin/destination layers when the active journey changes. Also
-  // animates the route line drawing for the newly-active journey.
+  // Re-paint route emphasis when the active journey OR the active panel
+  // changes. The clarity model has three tiers:
+  //   1. Active journey   — full color, thick, animated draw.
+  //   2. This panel's own journeys — medium emphasis (the story you're in).
+  //   3. Everything else  — faint ghost lines (still there, never gone).
+  // Also re-filters the numbered-pin and origin/destination layers.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !map.getLayer('journey-routes')) return;
 
     const activeFilter = activeJourney ?? '__none__';
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const isActive: any = ['==', ['get', 'journey_id'], activeFilter];
+    const inPanel: any = ['in', activePanel, ['get', 'panels']];
 
-    // Static route emphasis (dashes stay; thickness/opacity change)
-    map.setPaintProperty('journey-routes', 'line-width', [
-      'case',
-      ['==', ['get', 'journey_id'], activeFilter], 4,
-      2.5,
-    ]);
-    map.setPaintProperty('journey-routes', 'line-opacity', [
-      'case',
-      ['==', ['get', 'journey_id'], activeFilter],
-        // Hide the static route line while the animated overlay is drawing.
-        activeJourney ? 0 : 1,
-      activeJourney ? 0.2 : 0.7,
-    ]);
-    map.setPaintProperty('journey-stops', 'circle-radius', [
-      'case',
-      ['==', ['get', 'journey_id'], activeFilter], 9,
-      3,
-    ]);
-    map.setPaintProperty('journey-stops', 'circle-opacity', [
-      'case',
-      ['==', ['get', 'journey_id'], activeFilter], 1,
-      activeJourney ? 0.3 : 0.85,
-    ]);
+    map.setPaintProperty('journey-routes', 'line-width', (activeJourney
+      ? ['case', isActive, 4, 1.2]
+      : ['case', inPanel, 2.5, 1.2]) as any);
+    map.setPaintProperty('journey-routes', 'line-opacity', (activeJourney
+      // Active route is hidden while the animated overlay draws it.
+      ? ['case', isActive, 0, 0.08]
+      : ['case', inPanel, 0.6, 0.12]) as any);
+    map.setPaintProperty('journey-stops', 'circle-radius', (activeJourney
+      ? ['case', isActive, 9, 2.5]
+      : ['case', inPanel, 4.5, 2.5]) as any);
+    map.setPaintProperty('journey-stops', 'circle-opacity', (activeJourney
+      ? ['case', isActive, 1, 0.15]
+      : ['case', inPanel, 0.9, 0.2]) as any);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // Update which stops carry the numbered badge.
     if (map.getLayer('journey-stop-numbers')) {
@@ -638,7 +647,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
 
     // Fly to fit the active journey
     if (activeJourney) {
-      const route = (journeys.features as RouteFeature[]).find(
+      const route = (renderJourneys.features as RouteFeature[]).find(
         f => f.properties.kind === 'route' && f.properties.journey_id === activeJourney,
       );
       if (route) {
@@ -649,7 +658,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
         });
       }
     }
-  }, [activeJourney, journeys, mapLoaded]);
+  }, [activeJourney, activePanel, renderJourneys, mapLoaded]);
 
   // T1.3 — Refresh Origin / Destination label text when the user
   // switches language (the symbol layer text-field is set once at layer
@@ -697,19 +706,20 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
     if (!source) return;
 
     // No active journey → clear the animated overlay and let the
-    // static dashed routes show through normally.
+    // static dashed routes show through with panel-aware emphasis
+    // (must match the expression in the re-paint effect above).
     if (!activeJourney) {
       source.setData({ type: 'FeatureCollection', features: [] });
-      // Restore the static dashed line for all journeys.
       map.setPaintProperty('journey-routes', 'line-opacity', [
         'case',
-        ['==', ['get', 'journey_id'], '__none__'], 1,
-        0.7,
-      ]);
+        ['in', activePanel, ['get', 'panels']], 0.6,
+        0.12,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any);
       return;
     }
 
-    const route = (journeys.features as RouteFeature[]).find(
+    const route = (renderJourneys.features as RouteFeature[]).find(
       f => f.properties.kind === 'route' && f.properties.journey_id === activeJourney,
     );
     if (!route) return;
@@ -762,7 +772,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
       cancelled = true;
       if (raf !== null) cancelAnimationFrame(raf);
     };
-  }, [activeJourney, journeys, mapLoaded]);
+  }, [activeJourney, activePanel, renderJourneys, mapLoaded]);
 
   // T2.2 — Verse↔Map sync (Scripture → Map). When the user scrolls the
   // Scripture pane and a new verse enters the active range, find every
@@ -860,7 +870,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
     const map = mapRef.current;
     if (!map || !mapLoaded || !isWalking || !activeJourney) return;
 
-    const stops = (journeys.features as StopFeature[]).filter(
+    const stops = (renderJourneys.features as StopFeature[]).filter(
       f => f.geometry.type === 'Point' && f.properties.kind === 'stop'
         && f.properties.journey_id === activeJourney,
     );
@@ -922,7 +932,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
       cancelled = true;
       if (timeoutId !== null) clearTimeout(timeoutId);
     };
-  }, [isWalking, activeJourney, journeys, mapLoaded]);
+  }, [isWalking, activeJourney, renderJourneys, mapLoaded]);
 
   // Fit to the panel's bounding box on panel change (if no journey is active)
   useEffect(() => {
@@ -992,9 +1002,9 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
       entries.push({
         key: `loc-${loc.id}`,
         kind: 'location',
-        display: loc.ancient_name,
+        display: displayPlaceName(loc.ancient_name),
         sub: loc.modern_name || `${t.map.popupAppearsIn} ${loc.chapters_in_acts.join(', ')}`,
-        haystack: normalizeSearch(`${loc.ancient_name} ${loc.modern_name ?? ''}`),
+        haystack: normalizeSearch(`${displayPlaceName(loc.ancient_name)} ${loc.ancient_name} ${loc.modern_name ?? ''}`),
         lon: loc.lon, lat: loc.lat,
         location: loc,
       });
@@ -1002,7 +1012,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
 
     // 3. Journey stops (covers teaching sites not in locations.json,
     //    e.g. the Upper Room) — English + Kinyarwanda names.
-    for (const f of journeys.features) {
+    for (const f of renderJourneys.features) {
       if (f.properties.kind !== 'stop') continue;
       const stop = f as StopFeature;
       const p = stop.properties as StopProps;
@@ -1022,7 +1032,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
     }
 
     return entries;
-  }, [allLocations, journeys, t, lang]);
+  }, [allLocations, renderJourneys, t, lang]);
 
   const trimmedQuery = normalizeSearch(searchQuery.trim());
   const searchResults = trimmedQuery.length >= 2
@@ -1070,7 +1080,7 @@ export function MapPane({ locations, allLocations, journeys, activeJourney, onJo
     }
   };
 
-  const routeFeatures = (journeys.features as RouteFeature[]).filter(
+  const routeFeatures = (renderJourneys.features as RouteFeature[]).filter(
     f => f.properties.kind === 'route',
   );
 
@@ -1224,4 +1234,93 @@ function normalizeSearch(s: string) {
     out += ch;
   }
   return out.toLowerCase();
+}
+
+/** The OpenBible dataset disambiguates same-named places with a numeric
+ *  suffix ("Antioch 1", "Antioch 2"). Strip it for display — the map
+ *  position already disambiguates, and the suffix reads like clutter. */
+function displayPlaceName(name: string) {
+  return name.replace(/\s+\d+$/, '');
+}
+
+// ─── Journey de-cluttering ────────────────────────────────────────────
+
+/** Which story panels each journey belongs to. Used to emphasize the
+ *  active panel's journeys and ghost the rest. Journeys that span
+ *  multiple panels list each one. Unknown ids fall back to "always
+ *  relevant" so new journeys are never hidden by accident. */
+const JOURNEY_PANELS: Record<string, number[]> = {
+  'movement-jerusalem': [1],
+  'movement-philip': [2],
+  'movement-saul': [2],
+  'movement-peter': [2, 3],
+  'movement-antioch': [3],
+  'journey-1': [4],
+  'journey-2': [4, 5],
+  'journey-3': [5, 6],
+  'journey-4': [6],
+};
+const ALL_PANELS = [1, 2, 3, 4, 5, 6];
+
+/**
+ * Rebuild the journeys collection for display:
+ *  • every route LineString becomes a chain of gentle quadratic-bezier
+ *    arcs. The bow side alternates per journey and the strength grows
+ *    with the journey's index, so routes that share a corridor (e.g.
+ *    Jerusalem ↔ Caesarea appears in four journeys) fan apart into
+ *    distinguishable parallel ribbons instead of one stacked line;
+ *  • every feature gains a `panels` property (see JOURNEY_PANELS).
+ * Stops keep their exact coordinates — only the lines bend.
+ */
+function curveJourneys(jc: JourneysCollection): JourneysCollection {
+  let routeIndex = 0;
+  const features = jc.features.map(f => {
+    const panels = JOURNEY_PANELS[f.properties.journey_id] ?? ALL_PANELS;
+    if (f.properties.kind === 'route') {
+      const i = routeIndex++;
+      // 0:+0.05, 1:-0.05, 2:+0.078, 3:-0.078, 4:+0.106, …
+      const bow = (i % 2 === 0 ? 1 : -1) * (0.05 + 0.028 * Math.floor(i / 2));
+      const coords = (f as RouteFeature).geometry.coordinates;
+      const curved: [number, number][] = [];
+      for (let s = 0; s < coords.length - 1; s++) {
+        curved.push(...curveSegment(coords[s], coords[s + 1], bow));
+      }
+      curved.push(coords[coords.length - 1]);
+      return {
+        ...f,
+        geometry: { type: 'LineString' as const, coordinates: curved },
+        properties: { ...f.properties, panels },
+      };
+    }
+    return { ...f, properties: { ...f.properties, panels } };
+  });
+  return { ...jc, features } as JourneysCollection;
+}
+
+/** Sample a quadratic bezier from a to b whose control point sits
+ *  perpendicular to the segment midpoint, `bow` × segment-length away.
+ *  Returns points from a up to (but not including) b, so consecutive
+ *  segments chain without duplicates. */
+function curveSegment(
+  a: [number, number],
+  b: [number, number],
+  bow: number,
+): [number, number][] {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy);
+  if (len < 1e-6) return [[a[0], a[1]]];
+  const cx = (a[0] + b[0]) / 2 - dy * bow;
+  const cy = (a[1] + b[1]) / 2 + dx * bow;
+  const steps = Math.max(6, Math.min(20, Math.round(len * 6)));
+  const pts: [number, number][] = [];
+  for (let i = 0; i < steps; i++) {
+    const tt = i / steps;
+    const u = 1 - tt;
+    pts.push([
+      u * u * a[0] + 2 * u * tt * cx + tt * tt * b[0],
+      u * u * a[1] + 2 * u * tt * cy + tt * tt * b[1],
+    ]);
+  }
+  return pts;
 }
