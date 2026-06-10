@@ -228,6 +228,7 @@ export default function App() {
         <div className="h-[60vh] lg:h-auto lg:min-h-0 relative">
           <MapPane
             locations={visibleLocations}
+            allLocations={locations.locations}
             journeys={journeys}
             activeJourney={activeJourney}
             onJourneySelect={setActiveJourney}

@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "npm run data && tsc -b && vite build",
     "preview": "vite preview",
-    "data": "npm run data:bsb && npm run data:locations && npm run data:journeys",
+    "data": "npm run data:bsb && npm run data:locations && npm run data:journeys && npm run data:teachings",
     "data:bsb": "node scripts/fetch-bsb.mjs",
     "data:locations": "node scripts/parse-locations.mjs",
     "data:journeys": "node scripts/build-journeys.mjs",

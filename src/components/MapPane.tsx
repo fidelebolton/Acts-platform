@@ -1,11 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import maplibregl, { Map as MapLibreMap, Popup } from 'maplibre-gl';
 import * as turf from '@turf/turf';
 import type { ActsLocation, JourneysCollection, Panel, RouteFeature, StopFeature } from '../types';
+import { BIRTHPLACES, type BirthplaceId } from '../data/birthplaces';
 import { useT } from '../i18n/LanguageContext';
+
+/** Stop properties as they exist at runtime — the build pipeline merges
+ *  Kinyarwanda overlays (`name_rw`, `notes_rw`) into each stop feature. */
+type StopProps = StopFeature['properties'] & { name_rw?: string; notes_rw?: string };
 
 interface Props {
   locations: ActsLocation[];
+  /** The FULL location dataset (not panel-filtered) — used by the map
+   *  search so any place in Acts can be found from any panel. */
+  allLocations: ActsLocation[];
   journeys: JourneysCollection;
   activeJourney: string | null;
   onJourneySelect: (id: string | null) => void;
@@ -21,7 +29,7 @@ interface Props {
 // Open, no-API-key OSM-based vector tiles — parchment-tinted via paint
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
-export function MapPane({ locations, journeys, activeJourney, onJourneySelect, activePanel, activeVerseId, onOpenVerse }: Props) {
+export function MapPane({ locations, allLocations, journeys, activeJourney, onJourneySelect, activePanel, activeVerseId, onOpenVerse }: Props) {
   const { t, fmt, lang, journeyName } = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -62,6 +70,100 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
     fmtRef.current = fmt;
     langRef.current = lang;
   }, [t, fmt, lang]);
+
+  // ─── Shared popup builders ──────────────────────────────────────────
+  // Used by both the map click handlers (registered once) and the search
+  // box. They read the i18n dictionaries through refs so the HTML always
+  // renders in the currently-selected language.
+
+  const wireJumpButton = () => {
+    const btn = popupRef.current?.getElement()?.querySelector('[data-jump-verse]') as HTMLButtonElement | null;
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const ch = parseInt(btn.dataset.chapter || '0', 10);
+        const v = parseInt(btn.dataset.verse || '0', 10);
+        if (ch > 0 && v > 0) onOpenVerseRef.current?.(ch, v);
+      });
+    }
+  };
+
+  /** Rich bilingual popup for a birthplace star (Paul / Barnabas). */
+  const openBirthplacePopup = (id: BirthplaceId) => {
+    const map = mapRef.current;
+    const b = BIRTHPLACES.find(x => x.id === id);
+    if (!map || !b) return;
+    const tt = tRef.current;
+    const person = tt.birthplaces[id];
+    const refText = `${tt.scripture.chapterPrefix} ${b.chapter}:${b.verse}`;
+    popupRef.current?.remove();
+    popupRef.current = new maplibregl.Popup({ offset: 14 })
+      .setLngLat([b.lon, b.lat])
+      .setHTML(`
+        <div class="text-xs uppercase tracking-wider font-bold text-gold-dark">★ ${escapeHtml(tt.birthplaces.label)}</div>
+        <div class="font-heading text-base text-navy font-semibold">${escapeHtml(person.name)}</div>
+        <div class="text-xs text-navy/70 italic">${escapeHtml(person.place)} · ${escapeHtml(refText)}</div>
+        <div class="text-xs text-navy/80 mt-1.5 max-w-[280px] leading-relaxed">${escapeHtml(person.summary)}</div>
+        <button data-jump-verse data-chapter="${b.chapter}" data-verse="${b.verse}" class="mt-1.5 text-[11px] text-gold-dark hover:text-navy font-bold cursor-pointer">${escapeHtml(tt.map.jumpToVerse)}</button>
+      `)
+      .addTo(map);
+    wireJumpButton();
+  };
+
+  /** Popup for a generic Acts location (same shape as the click popup). */
+  const openLocationPopup = (loc: ActsLocation) => {
+    const map = mapRef.current;
+    if (!map) return;
+    const tt = tRef.current;
+    const va = loc.verses_in_acts || [];
+    const firstCh = va.length > 0 ? va[0].chapter : 0;
+    const firstV = va.length > 0 ? va[0].verse : 0;
+    popupRef.current?.remove();
+    popupRef.current = new maplibregl.Popup({ offset: 12, closeButton: true })
+      .setLngLat([loc.lon, loc.lat])
+      .setHTML(`
+        <div class="font-heading text-base text-navy font-semibold">${escapeHtml(loc.ancient_name)}</div>
+        <div class="text-xs text-navy/70 mb-1">${escapeHtml(tt.map.popupToday)}: <strong>${escapeHtml(loc.modern_name || '?')}</strong> · ${escapeHtml(loc.modern_country || '')}</div>
+        <div class="text-xs text-navy/60">${escapeHtml(tt.map.popupAppearsIn)} ${escapeHtml(loc.chapters_in_acts.join(', '))}</div>
+        ${firstCh > 0 ? `<button data-jump-verse data-chapter="${firstCh}" data-verse="${firstV}" class="mt-1.5 text-[11px] text-gold-dark hover:text-navy font-bold cursor-pointer">${escapeHtml(tt.map.jumpToVerse)}</button>` : ''}
+      `)
+      .addTo(map);
+    wireJumpButton();
+  };
+
+  /** Popup for a journey stop (same shape as the click popup). */
+  const openStopPopup = (p: StopProps, lon: number, lat: number) => {
+    const map = mapRef.current;
+    if (!map) return;
+    const tt = tRef.current;
+    const ff = fmtRef.current;
+    const isRw = langRef.current === 'rw';
+    const localizedJourney = (tt.journeys as Record<string, string>)[p.journey_id] ?? p.journey_name;
+    const localizedName = isRw && p.name_rw ? p.name_rw : p.name;
+    const localizedNotes = isRw && p.notes_rw ? p.notes_rw : p.notes;
+    const localizedRef = String(p.acts_ref || '').replace(/^Acts\b/, tt.scripture.chapterPrefix);
+    const refMatch = String(p.acts_ref || '').match(/(\d+):(\d+)/);
+    const jumpCh = refMatch ? parseInt(refMatch[1], 10) : 0;
+    const jumpV = refMatch ? parseInt(refMatch[2], 10) : 0;
+    popupRef.current?.remove();
+    popupRef.current = new maplibregl.Popup({ offset: 12 })
+      .setLngLat([lon, lat])
+      .setHTML(`
+        <div class="text-xs uppercase tracking-wider font-bold" style="color:${p.color}">
+          ${escapeHtml(ff(tt.map.popupStopOf, { n: p.sequence, total: p.total_stops }))}
+        </div>
+        <div class="font-heading text-base text-navy font-semibold">${escapeHtml(localizedName)}</div>
+        <div class="text-xs text-navy/70 italic">${escapeHtml(localizedJourney)}</div>
+        <div class="text-xs text-navy mt-1">${escapeHtml(localizedRef)}</div>
+        <div class="text-xs text-navy/80 mt-1 max-w-[260px]">${escapeHtml(localizedNotes)}</div>
+        ${jumpCh > 0 ? `<button data-jump-verse data-chapter="${jumpCh}" data-verse="${jumpV}" class="mt-1.5 text-[11px] text-gold-dark hover:text-navy font-bold cursor-pointer">${escapeHtml(tt.map.jumpToVerse)}</button>` : ''}
+      `)
+      .addTo(map);
+    wireJumpButton();
+  };
+  // Keep the latest popup builders reachable from click handlers that
+  // were registered once on layer creation.
+  const openBirthplacePopupRef = useRef(openBirthplacePopup);
+  useEffect(() => { openBirthplacePopupRef.current = openBirthplacePopup; });
 
   // Init map once
   useEffect(() => {
@@ -393,6 +495,93 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
       map.on('mouseleave', 'journey-stops', () => map.getCanvas().style.cursor = '');
     }
   }, [journeys, mapLoaded]);
+
+  // Birthplaces of Paul (Tarsus) and Barnabas (Cyprus/Salamis) — gold
+  // stars with permanent labels, always visible above the journey layers
+  // regardless of the active panel or journey. Clicking a star opens a
+  // rich bilingual popup summarizing the man's origins and ministry.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || map.getSource('birthplaces')) return;
+
+    map.addSource('birthplaces', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: BIRTHPLACES.map(b => ({
+          type: 'Feature' as const,
+          geometry: { type: 'Point' as const, coordinates: [b.lon, b.lat] },
+          properties: { id: b.id },
+        })),
+      },
+    });
+
+    // The star itself — gold with a navy halo so it pops against both
+    // the parchment basemap and the navy location dots.
+    map.addLayer({
+      id: 'birthplace-stars',
+      type: 'symbol',
+      source: 'birthplaces',
+      layout: {
+        'text-field': '★',
+        'text-font': ['Noto Sans Bold'],
+        'text-size': 22,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+      },
+      paint: {
+        'text-color': '#C9A84C',
+        'text-halo-color': '#1B2A4A',
+        'text-halo-width': 1.4,
+      },
+    });
+
+    // Permanent label under the star ("Birthplace of Paul" / "Aho
+    // Pawulo yavukiye"). Text is refreshed on language change in a
+    // dedicated effect below (symbol text is set at creation time).
+    map.addLayer({
+      id: 'birthplace-labels',
+      type: 'symbol',
+      source: 'birthplaces',
+      layout: {
+        'text-field': [
+          'case',
+          ['==', ['get', 'id'], 'paul'], tRef.current.birthplaces.paul.mapLabel,
+          tRef.current.birthplaces.barnabas.mapLabel,
+        ],
+        'text-font': ['Noto Sans Bold'],
+        'text-size': 11,
+        'text-offset': [0, 1.25],
+        'text-anchor': 'top',
+        'text-allow-overlap': true,
+      },
+      paint: {
+        'text-color': '#1B2A4A',
+        'text-halo-color': '#FDF8F0',
+        'text-halo-width': 2,
+      },
+    });
+
+    map.on('click', 'birthplace-stars', e => {
+      const feat = e.features?.[0];
+      if (!feat) return;
+      const id = (feat.properties as { id: string }).id as BirthplaceId;
+      openBirthplacePopupRef.current(id);
+    });
+    map.on('mouseenter', 'birthplace-stars', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', 'birthplace-stars', () => map.getCanvas().style.cursor = '');
+  }, [mapLoaded]);
+
+  // Refresh the birthplace label text when the user switches language.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !map.getLayer('birthplace-labels')) return;
+    map.setLayoutProperty('birthplace-labels', 'text-field', [
+      'case',
+      ['==', ['get', 'id'], 'paul'], t.birthplaces.paul.mapLabel,
+      t.birthplaces.barnabas.mapLabel,
+    ]);
+  }, [t.birthplaces.paul.mapLabel, t.birthplaces.barnabas.mapLabel, mapLoaded]);
 
   // Re-paint route emphasis + re-filter the numbered-pin and
   // origin/destination layers when the active journey changes. Also
@@ -752,6 +941,135 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
     });
   }, [activePanel, locations, mapLoaded, activeJourney]);
 
+  // ─── Searchable map ─────────────────────────────────────────────────
+  // Index = birthplaces + every Acts location (FULL dataset, not the
+  // panel-filtered one) + every journey stop, de-duplicated by name +
+  // rounded coordinates. Matching is case- and diacritic-insensitive and
+  // covers both English and Kinyarwanda names.
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchHl, setSearchHl] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  interface SearchEntry {
+    key: string;
+    kind: 'birthplace' | 'location' | 'stop';
+    display: string;
+    sub: string;
+    haystack: string;
+    lon: number;
+    lat: number;
+    birthplaceId?: BirthplaceId;
+    location?: ActsLocation;
+    stop?: StopProps;
+  }
+
+  const searchIndex = useMemo<SearchEntry[]>(() => {
+    const entries: SearchEntry[] = [];
+    const seen = new Set<string>();
+    const dedupKey = (name: string, lon: number, lat: number) =>
+      `${normalizeSearch(name)}|${lon.toFixed(1)}|${lat.toFixed(1)}`;
+
+    // 1. Birthplaces — always first in the results.
+    for (const b of BIRTHPLACES) {
+      const person = t.birthplaces[b.id];
+      entries.push({
+        key: `birthplace-${b.id}`,
+        kind: 'birthplace',
+        display: `★ ${person.place}`,
+        sub: person.mapLabel,
+        haystack: normalizeSearch(`${person.place} ${person.name} ${person.mapLabel} ${b.keywords}`),
+        lon: b.lon, lat: b.lat,
+        birthplaceId: b.id,
+      });
+    }
+
+    // 2. Generic Acts locations (ancient + modern names).
+    for (const loc of allLocations) {
+      const k = dedupKey(loc.ancient_name, loc.lon, loc.lat);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      entries.push({
+        key: `loc-${loc.id}`,
+        kind: 'location',
+        display: loc.ancient_name,
+        sub: loc.modern_name || `${t.map.popupAppearsIn} ${loc.chapters_in_acts.join(', ')}`,
+        haystack: normalizeSearch(`${loc.ancient_name} ${loc.modern_name ?? ''}`),
+        lon: loc.lon, lat: loc.lat,
+        location: loc,
+      });
+    }
+
+    // 3. Journey stops (covers teaching sites not in locations.json,
+    //    e.g. the Upper Room) — English + Kinyarwanda names.
+    for (const f of journeys.features) {
+      if (f.properties.kind !== 'stop') continue;
+      const stop = f as StopFeature;
+      const p = stop.properties as StopProps;
+      const [lon, lat] = stop.geometry.coordinates;
+      const k = dedupKey(p.name, lon, lat);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      entries.push({
+        key: `stop-${p.journey_id}-${p.sequence}`,
+        kind: 'stop',
+        display: lang === 'rw' && p.name_rw ? p.name_rw : p.name,
+        sub: String(p.acts_ref || '').replace(/^Acts\b/, t.scripture.chapterPrefix),
+        haystack: normalizeSearch(`${p.name} ${p.name_rw ?? ''}`),
+        lon, lat,
+        stop: p,
+      });
+    }
+
+    return entries;
+  }, [allLocations, journeys, t, lang]);
+
+  const trimmedQuery = normalizeSearch(searchQuery.trim());
+  const searchResults = trimmedQuery.length >= 2
+    ? searchIndex.filter(e => e.haystack.includes(trimmedQuery)).slice(0, 8)
+    : [];
+  const searchOpen = searchFocused && trimmedQuery.length >= 2;
+  const hlIndex = Math.min(searchHl, Math.max(0, searchResults.length - 1));
+
+  const handleSearchSelect = (entry: SearchEntry) => {
+    const map = mapRef.current;
+    if (!map) return;
+    setSearchFocused(false);
+    setSearchQuery(entry.display.replace(/^★ /, ''));
+    searchInputRef.current?.blur();
+    map.flyTo({
+      center: [entry.lon, entry.lat],
+      zoom: Math.max(map.getZoom(), 6),
+      duration: 1100,
+      essential: true,
+    });
+    if (entry.kind === 'birthplace' && entry.birthplaceId) {
+      openBirthplacePopup(entry.birthplaceId);
+    } else if (entry.kind === 'location' && entry.location) {
+      openLocationPopup(entry.location);
+    } else if (entry.kind === 'stop' && entry.stop) {
+      openStopPopup(entry.stop, entry.lon, entry.lat);
+    }
+  };
+
+  const handleSearchKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSearchHl(h => Math.min(h + 1, searchResults.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSearchHl(h => Math.max(h - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const entry = searchResults[hlIndex];
+      if (entry) handleSearchSelect(entry);
+    } else if (e.key === 'Escape') {
+      setSearchQuery('');
+      setSearchFocused(false);
+      searchInputRef.current?.blur();
+    }
+  };
+
   const routeFeatures = (journeys.features as RouteFeature[]).filter(
     f => f.properties.kind === 'route',
   );
@@ -759,6 +1077,66 @@ export function MapPane({ locations, journeys, activeJourney, onJourneySelect, a
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="absolute inset-0" />
+
+      {/* Map search — type a place ("Antioch", "Korinto", "Tarsus") and
+          fly to it with its popup open. Sits top-center on desktop; on
+          mobile it drops below the collapsed legend pill, full width. */}
+      <div className="absolute top-14 left-3 right-14 z-20 sm:top-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[280px]">
+        <div className="relative">
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={e => { setSearchQuery(e.target.value); setSearchHl(0); }}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            onKeyDown={handleSearchKeyDown}
+            placeholder={t.mapSearch.placeholder}
+            aria-label={t.mapSearch.label}
+            role="combobox"
+            aria-expanded={searchOpen}
+            aria-controls="map-search-results"
+            className="w-full bg-cream-warm/95 backdrop-blur rounded-full shadow-md border border-cream-dark pl-8 pr-8 py-1.5 text-[13px] text-navy placeholder:text-navy/45 focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold"
+          />
+          <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/50 text-sm">🔎</span>
+          {searchQuery && (
+            <button
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+              aria-label={t.mapSearch.clear}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-navy/45 hover:text-navy text-xs"
+            >
+              ✕
+            </button>
+          )}
+
+          {searchOpen && (
+            <ul
+              id="map-search-results"
+              role="listbox"
+              className="absolute top-full left-0 right-0 mt-1.5 bg-cream-warm/95 backdrop-blur rounded-lg shadow-lg border border-cream-dark overflow-hidden max-h-72 overflow-y-auto"
+            >
+              {searchResults.length === 0 ? (
+                <li className="px-3 py-2 text-xs text-navy/60 italic">{t.mapSearch.noResults}</li>
+              ) : (
+                searchResults.map((entry, i) => (
+                  <li key={entry.key} role="option" aria-selected={i === hlIndex}>
+                    <button
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => handleSearchSelect(entry)}
+                      onMouseEnter={() => setSearchHl(i)}
+                      className={`w-full text-left px-3 py-1.5 transition-colors ${i === hlIndex ? 'bg-cream-dark/70' : ''}`}
+                    >
+                      <span className="block text-[13px] text-navy font-semibold leading-snug">{entry.display}</span>
+                      <span className="block text-[11px] text-navy/60 leading-snug">{entry.sub}</span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
+        </div>
+      </div>
 
       {/* Journey selector overlay. On narrow viewports the legend collapses
           into a small pill button to keep the map readable. */}
@@ -833,4 +1211,17 @@ function escapeHtml(s: string | number) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/** Lowercase + strip combining diacritics so "Cäsarea" and "caesarea"
+ *  match each other. Implemented without a regex character class to
+ *  avoid any source-encoding ambiguity. */
+function normalizeSearch(s: string) {
+  let out = '';
+  for (const ch of s.normalize('NFD')) {
+    const c = ch.charCodeAt(0);
+    if (c >= 0x0300 && c <= 0x036f) continue; // combining marks
+    out += ch;
+  }
+  return out.toLowerCase();
 }

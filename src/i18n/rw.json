@@ -34,7 +34,7 @@
     "chapterUnavailable": "Iki gice ntikirahari muri uru rurimi."
   },
   "map": {
-    "legendHeader": "Ingendo za Pawulo",
+    "legendHeader": "Ingendo n'Imigendekere",
     "allLocations": "Ahantu hose",
     "popupToday": "Ubu",
     "popupAppearsIn": "Bigaragara mu Byakozwe",
@@ -44,6 +44,27 @@
     "walkJourney": "Tembera uru rugendo",
     "stopJourney": "Hagarara",
     "jumpToVerse": "Funguramo mu Byanditswe →"
+  },
+  "mapSearch": {
+    "label": "Shakisha ku ikarita",
+    "placeholder": "Shakisha ahantu… (urugero: Antiyokiya)",
+    "noResults": "Nta hantu habonetse",
+    "clear": "Siba"
+  },
+  "birthplaces": {
+    "label": "Aho yavukiye",
+    "paul": {
+      "mapLabel": "Aho Pawulo yavukiye",
+      "name": "Sawuli w'i Taruso (Pawulo)",
+      "place": "Taruso, Kilikiya",
+      "summary": "Sawuli yavukiye hano i Taruso — \"umuturage w'umugi ukomeye\" (Ibyakozwe 21:39). Yari Umuyahudi w'umuturage w'Abaroma kuva avuka, yigishijwe i Yerusalemu na Gamaliyeli; yarenganyaga itorero kugeza ubwo Kristo wazutse amubonekeye mu nzira ya Damasiko. Nyuma y'imyaka yo kwicecekera hano i Taruso, Barinaba yaje kumushaka amujyana i Antiyokiya (Ibyakozwe 11:25) — uwarenganyaga itorero ahinduka intumwa y'amahanga."
+    },
+    "barnabas": {
+      "mapLabel": "Aho Barinaba yavukiye",
+      "name": "Barinaba (Yosefu Umulewi)",
+      "place": "Kupuro (Salami)",
+      "summary": "Yosefu, Umulewi wavukiye muri Kupuro, intumwa zamwise Barinaba — \"Umwana w'ihumure\" (Ibyakozwe 4:36). Yagurishije umurima we afasha itorero rya Yerusalemu, avuganira Sawuli wari umaze guhinduka igihe abandi bose bamutinyaga, yemera ubuntu bw'Imana mu Banyamahanga i Antiyokiya, kandi aha Mariko Yohana amahirwe ya kabiri. Mu rugendo rwa mbere yabwirije hano i Salami (Ibyakozwe 13:5); imigenzo ivuga ko yapfiriye hano ahagana mu mwaka wa 61."
+    }
   },
   "journeys": {
     "movement-jerusalem": "Yerusalemu n'Itorero rya mbere",

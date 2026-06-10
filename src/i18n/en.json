@@ -34,7 +34,7 @@
     "chapterUnavailable": "This chapter is not yet available in this language."
   },
   "map": {
-    "legendHeader": "Paul's Journeys",
+    "legendHeader": "Movements & Journeys",
     "allLocations": "All locations",
     "popupToday": "Today",
     "popupAppearsIn": "Appears in Acts",
@@ -44,6 +44,27 @@
     "walkJourney": "Walk this journey",
     "stopJourney": "Stop",
     "jumpToVerse": "Open in Scripture →"
+  },
+  "mapSearch": {
+    "label": "Search the map",
+    "placeholder": "Search a place… (e.g. Antioch)",
+    "noResults": "No places found",
+    "clear": "Clear search"
+  },
+  "birthplaces": {
+    "label": "Birthplace",
+    "paul": {
+      "mapLabel": "Birthplace of Paul",
+      "name": "Saul of Tarsus (Paul)",
+      "place": "Tarsus, Cilicia",
+      "summary": "Saul was born here in Tarsus — \"a citizen of no ordinary city\" (Acts 21:39). A Hellenistic Jew and Roman citizen by birth, trained in Jerusalem under Gamaliel, he persecuted the church until the risen Christ met him on the Damascus road. After years of obscurity back home in Tarsus, Barnabas came here to find him and brought him to Antioch (Acts 11:25) — and the persecutor became the apostle to the nations."
+    },
+    "barnabas": {
+      "mapLabel": "Birthplace of Barnabas",
+      "name": "Barnabas (Joseph the Levite)",
+      "place": "Cyprus (Salamis)",
+      "summary": "Joseph, a Levite born on Cyprus, was named Barnabas — \"Son of Encouragement\" — by the apostles (Acts 4:36). He sold his field to support the Jerusalem church, stood up for the converted Saul when everyone else feared him, recognized the grace of God among the Gentiles at Antioch, and gave John Mark a second chance. On the First Journey he preached here at Salamis (Acts 13:5); tradition says he was martyred here around AD 61."
+    }
   },
   "journeys": {
     "movement-jerusalem": "Jerusalem and the Early Church",
