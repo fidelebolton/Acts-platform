@@ -239,5 +239,10 @@
     "next": "Next",
     "play": "Play the story",
     "stop": "Stop"
+  },
+  "present": {
+    "start": "Teach mode",
+    "stop": "Exit teach",
+    "hint": "Use the ← → arrow keys to step through the story"
   }
 }

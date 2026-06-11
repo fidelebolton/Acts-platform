@@ -22,6 +22,10 @@ export function TwoLivesView({ open, onClose, onOpenVerse }: Props) {
   const { t, fmt, lang } = useT();
   const [stageIdx, setStageIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
+  // Teach mode — projection-size scene text + arrow-key stepping.
+  const [presenting, setPresenting] = useState(false);
+  const presentingRef = useRef(presenting);
+  useEffect(() => { presentingRef.current = presenting; }, [presenting]);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const popupRef = useRef<Popup | null>(null);
@@ -44,10 +48,23 @@ export function TwoLivesView({ open, onClose, onOpenVerse }: Props) {
   // Reset when reopened.
   useEffect(() => { if (open) { setStageIdx(0); setPlaying(false); } }, [open]);
 
-  // Esc closes.
+  // Keyboard: Esc exits teach mode first, then the view; ← → step scenes.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (presentingRef.current) setPresenting(false);
+        else onClose();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setPlaying(false);
+        setStageIdx(i => Math.min(DUO_STAGES.length - 1, i + 1));
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setPlaying(false);
+        setStageIdx(i => Math.max(0, i - 1));
+      }
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
@@ -263,12 +280,24 @@ export function TwoLivesView({ open, onClose, onOpenVerse }: Props) {
           </h2>
           <p className="text-xs text-navy/60">{t.twoLives.subtitle}</p>
         </div>
-        <button
-          onClick={onClose}
-          className="shrink-0 text-xs font-bold uppercase tracking-wider text-navy/70 hover:text-navy border border-cream-dark hover:border-gold rounded-full px-3 py-1.5 transition-colors"
-        >
-          ✕ {t.twoLives.close}
-        </button>
+        <div className="shrink-0 flex items-center gap-2">
+          <button
+            onClick={() => setPresenting(p => !p)}
+            className={`text-xs font-bold uppercase tracking-wider rounded-full px-3 py-1.5 border transition-colors ${
+              presenting
+                ? 'bg-gold text-navy border-gold'
+                : 'text-navy/70 hover:text-navy border-cream-dark hover:border-gold'
+            }`}
+          >
+            🖥 {presenting ? t.present.stop : t.present.start}
+          </button>
+          <button
+            onClick={onClose}
+            className="text-xs font-bold uppercase tracking-wider text-navy/70 hover:text-navy border border-cream-dark hover:border-gold rounded-full px-3 py-1.5 transition-colors"
+          >
+            ✕ {t.twoLives.close}
+          </button>
+        </div>
       </header>
 
       {/* Double-lane timeline: gold ties where their roads run together */}
@@ -340,7 +369,7 @@ export function TwoLivesView({ open, onClose, onOpenVerse }: Props) {
                 {stage.together ? `⇄ ${t.twoLives.together}` : t.twoLives.apart}
               </span>
             </div>
-            <div className="font-heading text-lg text-navy leading-tight">{isRw ? stage.title_rw : stage.title}</div>
+            <div className={`font-heading ${presenting ? 'text-2xl md:text-3xl' : 'text-lg'} text-navy leading-tight`}>{isRw ? stage.title_rw : stage.title}</div>
             <div className="text-[11px] text-navy/60">
               {stage.ref.replace(/^Acts\b/, t.scripture.chapterPrefix)}
               {stage.chapter > 0 && (
@@ -375,17 +404,17 @@ export function TwoLivesView({ open, onClose, onOpenVerse }: Props) {
             <div className="text-[10px] md:text-xs uppercase tracking-wider font-bold" style={{ color: DUO_COLORS.paul }}>
               {isRw ? 'Sawuli / Pawulo' : 'Saul / Paul'}
             </div>
-            <div className="text-[12px] md:text-[13px] font-semibold text-navy">{isRw ? stage.paul.place_rw : stage.paul.place}</div>
+            <div className={`${presenting ? 'text-[15px] md:text-[18px]' : 'text-[12px] md:text-[13px]'} font-semibold text-navy`}>{isRw ? stage.paul.place_rw : stage.paul.place}</div>
             <div className="text-[10px] md:text-[11px] text-navy/50">{t.map.popupToday}: {stage.paul.modern}</div>
-            <p className="text-[11px] md:text-[12.5px] text-navy/85 leading-snug mt-1">{isRw ? stage.paul.text_rw : stage.paul.text}</p>
+            <p className={`${presenting ? 'text-[14px] md:text-[17px] leading-relaxed' : 'text-[11px] md:text-[12.5px] leading-snug'} text-navy/85 mt-1`}>{isRw ? stage.paul.text_rw : stage.paul.text}</p>
           </div>
           <div className="rounded-lg bg-cream border-l-4 p-2.5 md:p-3" style={{ borderColor: DUO_COLORS.barnabas }}>
             <div className="text-[10px] md:text-xs uppercase tracking-wider font-bold" style={{ color: DUO_COLORS.barnabas }}>
               {barnName}
             </div>
-            <div className="text-[12px] md:text-[13px] font-semibold text-navy">{isRw ? stage.barnabas.place_rw : stage.barnabas.place}</div>
+            <div className={`${presenting ? 'text-[15px] md:text-[18px]' : 'text-[12px] md:text-[13px]'} font-semibold text-navy`}>{isRw ? stage.barnabas.place_rw : stage.barnabas.place}</div>
             <div className="text-[10px] md:text-[11px] text-navy/50">{t.map.popupToday}: {stage.barnabas.modern}</div>
-            <p className="text-[11px] md:text-[12.5px] text-navy/85 leading-snug mt-1">{isRw ? stage.barnabas.text_rw : stage.barnabas.text}</p>
+            <p className={`${presenting ? 'text-[14px] md:text-[17px] leading-relaxed' : 'text-[11px] md:text-[12.5px] leading-snug'} text-navy/85 mt-1`}>{isRw ? stage.barnabas.text_rw : stage.barnabas.text}</p>
           </div>
         </div>
       </div>

@@ -239,5 +239,10 @@
     "next": "Komeza",
     "play": "Tangiza inkuru",
     "stop": "Hagarara"
+  },
+  "present": {
+    "start": "Uburyo bwo kwigisha",
+    "stop": "Sohoka",
+    "hint": "Koresha utubuto ← → uhindura ibice by’inkuru"
   }
 }

@@ -27,6 +27,12 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
   const { t, fmt, lang } = useT();
   const [figureId, setFigureId] = useState<AtlasFigureId>('peter');
   const [activeSeq, setActiveSeq] = useState<number | null>(null);
+  // Teach mode — projection-friendly: big caption card, arrow-key
+  // stepping, story sidebar hidden so the map fills the screen.
+  const [presenting, setPresenting] = useState(false);
+  const presentingRef = useRef(presenting);
+  const activeSeqRef = useRef(activeSeq);
+  useEffect(() => { presentingRef.current = presenting; activeSeqRef.current = activeSeq; }, [presenting, activeSeq]);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const popupRef = useRef<Popup | null>(null);
@@ -52,13 +58,37 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
   // New leader → fresh page of the atlas.
   useEffect(() => { setActiveSeq(null); }, [figureId]);
 
-  // Esc closes the atlas.
+  // Keyboard: Esc exits teach mode first, then the atlas; ← → step
+  // through the figure's life events (made for teaching).
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (presentingRef.current) setPresenting(false);
+        else onClose();
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const fig = figureRef.current;
+        const cur = activeSeqRef.current;
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        const next = cur === null
+          ? (dir === 1 ? 1 : fig.events.length)
+          : Math.min(Math.max(cur + dir, 1), fig.events.length);
+        const ev = fig.events.find(x => x.seq === next);
+        if (ev) flyToEventRef.current(ev);
+      }
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
+
+  // Entering teach mode with nothing selected → start at the birth.
+  useEffect(() => {
+    if (!open || !presenting) return;
+    if (activeSeqRef.current === null && figureRef.current.events.length > 0) {
+      flyToEventRef.current(figureRef.current.events[0]);
+    }
+  }, [open, presenting, figureId]);
 
   /** Build + open the popup for one life event (shared by all views). */
   const openEventPopup = (e: AtlasEvent) => {
@@ -105,7 +135,8 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
     setActiveSeq(e.seq);
     itemRefs.current[e.seq]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     map.flyTo({ center: [e.lon, e.lat], zoom: Math.max(map.getZoom(), 5.5), duration: 1000, essential: true });
-    openEventPopup(e);
+    if (presentingRef.current) popupRef.current?.remove();
+    else openEventPopup(e);
   };
   const flyToEventRef = useRef(flyToEvent);
   useEffect(() => { flyToEventRef.current = flyToEvent; });
@@ -291,6 +322,10 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
   const decadeTicks: number[] = [];
   for (let d = Math.ceil(minYear / 10) * 10; d <= maxYear; d += 10) decadeTicks.push(d);
 
+  const activeEvent = activeSeq !== null
+    ? figure.events.find(e => e.seq === activeSeq) ?? null
+    : null;
+
   if (!open) return null;
 
   return (
@@ -303,12 +338,24 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
           </h2>
           <p className="text-xs text-navy/60">{t.atlas.subtitle}</p>
         </div>
-        <button
-          onClick={onClose}
-          className="shrink-0 text-xs font-bold uppercase tracking-wider text-navy/70 hover:text-navy border border-cream-dark hover:border-gold rounded-full px-3 py-1.5 transition-colors"
-        >
-          ✕ {t.atlas.close}
-        </button>
+        <div className="shrink-0 flex items-center gap-2">
+          <button
+            onClick={() => setPresenting(p => !p)}
+            className={`text-xs font-bold uppercase tracking-wider rounded-full px-3 py-1.5 border transition-colors ${
+              presenting
+                ? 'bg-gold text-navy border-gold'
+                : 'text-navy/70 hover:text-navy border-cream-dark hover:border-gold'
+            }`}
+          >
+            🖥 {presenting ? t.present.stop : t.present.start}
+          </button>
+          <button
+            onClick={onClose}
+            className="text-xs font-bold uppercase tracking-wider text-navy/70 hover:text-navy border border-cream-dark hover:border-gold rounded-full px-3 py-1.5 transition-colors"
+          >
+            ✕ {t.atlas.close}
+          </button>
+        </div>
       </header>
 
       {/* Figure chips — one map per person */}
@@ -394,8 +441,39 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
         <div className="relative flex-1 min-h-[38vh]">
           <div ref={containerRef} className="absolute inset-0" />
+
+          {/* Teach-mode caption — projection-size text over the map */}
+          {presenting && activeEvent && (
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-4 md:bottom-7 z-10 w-[min(880px,94%)] bg-cream-warm/95 backdrop-blur border-2 border-gold rounded-2xl shadow-2xl px-5 md:px-8 py-4 md:py-5">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span
+                  className="w-9 h-9 rounded-full text-base font-bold text-cream flex items-center justify-center"
+                  style={{ background: figure.color }}
+                >
+                  {activeEvent.seq}
+                </span>
+                <span className="text-sm md:text-base font-bold uppercase tracking-wider" style={{ color: figure.color }}>
+                  {t.atlas.kind[activeEvent.kind]} · {activeEvent.yearLabel}
+                </span>
+                <span className="ml-auto text-sm md:text-base text-navy/70 font-semibold">
+                  {activeEvent.ref.replace(/^Acts\b/, t.scripture.chapterPrefix)}
+                </span>
+              </div>
+              <div className="font-heading text-2xl md:text-3xl text-navy mt-1 leading-tight">
+                {isRw ? activeEvent.title_rw : activeEvent.title}
+              </div>
+              <div className="text-sm md:text-base text-navy/70">
+                {isRw ? activeEvent.place_rw : activeEvent.place} · {t.map.popupToday}: {activeEvent.modern}
+              </div>
+              <p className="text-base md:text-xl text-navy/90 leading-relaxed mt-2">
+                {isRw ? activeEvent.note_rw : activeEvent.note}
+              </p>
+              <div className="text-[11px] text-navy/45 mt-2">{t.present.hint}</div>
+            </div>
+          )}
         </div>
 
+        {!presenting && (
         <aside className="lg:w-[380px] lg:min-w-[340px] border-t lg:border-t-0 lg:border-l border-cream-dark bg-cream-warm/40 overflow-y-auto max-h-[38vh] lg:max-h-none">
           <div className="px-4 py-3 border-b border-cream-dark bg-cream-warm/70 sticky top-0 backdrop-blur z-10">
             <div className="text-xs uppercase tracking-widest font-bold" style={{ color: figure.color }}>
@@ -450,6 +528,7 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
             ))}
           </ol>
         </aside>
+        )}
       </div>
     </div>
   );
