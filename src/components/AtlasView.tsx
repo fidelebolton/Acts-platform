@@ -11,6 +11,8 @@ interface Props {
   onClose: () => void;
   /** Jump to a verse in the Scripture pane (closes the atlas first). */
   onOpenVerse?: (chapter: number, verse: number) => void;
+  /** Open the side-by-side Paul & Barnabas story. */
+  onOpenDuo?: () => void;
 }
 
 /**
@@ -21,7 +23,7 @@ interface Props {
  * interact: tap a year on the timeline, a marker on the map, or an event
  * in the story — the other two follow.
  */
-export function AtlasView({ open, onClose, onOpenVerse }: Props) {
+export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
   const { t, fmt, lang } = useT();
   const [figureId, setFigureId] = useState<AtlasFigureId>('peter');
   const [activeSeq, setActiveSeq] = useState<number | null>(null);
@@ -311,6 +313,15 @@ export function AtlasView({ open, onClose, onOpenVerse }: Props) {
 
       {/* Figure chips — one map per person */}
       <div className="border-b border-cream-dark bg-cream-warm/60 px-3 md:px-6 py-2 flex gap-1.5 overflow-x-auto">
+        {onOpenDuo && (
+          <button
+            onClick={onOpenDuo}
+            className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-gold bg-gold/15 text-navy font-semibold hover:bg-gold/30 transition-colors"
+          >
+            <span aria-hidden="true">⇄</span>
+            {t.atlas.duoChip}
+          </button>
+        )}
         {ATLAS_FIGURES.map(f => (
           <button
             key={f.id}

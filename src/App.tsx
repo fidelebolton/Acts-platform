@@ -12,6 +12,7 @@ import { TeachingPane } from './components/TeachingPane';
 import { TimelineBar } from './components/TimelineBar';
 import { TimelineView } from './components/TimelineView';
 import { AtlasView } from './components/AtlasView';
+import { TwoLivesView } from './components/TwoLivesView';
 import { useT, DICTIONARIES, type LangCode } from './i18n/LanguageContext';
 
 type LoadState =
@@ -32,6 +33,7 @@ export default function App() {
   const [activeJourney, setActiveJourney] = useState<string | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [atlasOpen, setAtlasOpen] = useState(false);
+  const [duoOpen, setDuoOpen] = useState(false);
 
   // Keep the browser tab title in the active language.
   useEffect(() => {
@@ -271,6 +273,13 @@ export default function App() {
       <AtlasView
         open={atlasOpen}
         onClose={() => setAtlasOpen(false)}
+        onOpenVerse={handleOpenVerse}
+        onOpenDuo={() => { setAtlasOpen(false); setDuoOpen(true); }}
+      />
+
+      <TwoLivesView
+        open={duoOpen}
+        onClose={() => setDuoOpen(false)}
         onOpenVerse={handleOpenVerse}
       />
 

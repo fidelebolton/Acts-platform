@@ -223,6 +223,21 @@
       "tradition": "Umugenzo w'Itorero"
     },
     "timelineLabel": "Ubuzima bwe mu gihe — ku gipimo",
-    "timelineHint": "kanda umwaka — ikarita n'inkuru birakurikira"
+    "timelineHint": "kanda umwaka — ikarita n'inkuru birakurikira",
+    "duoChip": "Pawulo na Barinaba — babangikanye"
+  },
+  "twoLives": {
+    "title": "Ubuzima Bubiri, Umuhamagaro Umwe — Sawuli na Barinaba",
+    "subtitle": "Babangikanye: aho bavukiye, uko batojwe, n'uko Imana yahuje inzira zabo.",
+    "close": "Funga",
+    "lanesLabel": "Inzira ebyiri mu gihe — imirongo y'izahabu yerekana ibihe bagendanye",
+    "hint": "kanda igice — ikarita irakurikira",
+    "stageOf": "Igice cya {n} kuri {total}",
+    "together": "Bari kumwe",
+    "apart": "Baratandukanye",
+    "prev": "Subira",
+    "next": "Komeza",
+    "play": "Tangiza inkuru",
+    "stop": "Hagarara"
   }
 }

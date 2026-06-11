@@ -223,6 +223,21 @@
       "tradition": "Church tradition"
     },
     "timelineLabel": "His life in time — drawn to scale",
-    "timelineHint": "tap a year — the map and the story follow"
+    "timelineHint": "tap a year — the map and the story follow",
+    "duoChip": "Paul & Barnabas — side by side"
+  },
+  "twoLives": {
+    "title": "Two Lives, One Calling — Saul & Barnabas",
+    "subtitle": "Side by side: where they were born, how they were trained, and how God wove their roads together.",
+    "close": "Close",
+    "lanesLabel": "Two roads in time — gold ties mark the seasons they walked together",
+    "hint": "tap a scene — the map follows",
+    "stageOf": "Scene {n} of {total}",
+    "together": "Together",
+    "apart": "Apart",
+    "prev": "Back",
+    "next": "Next",
+    "play": "Play the story",
+    "stop": "Stop"
   }
 }
