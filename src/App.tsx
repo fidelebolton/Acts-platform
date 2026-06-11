@@ -32,7 +32,11 @@ export default function App() {
   const [showTeaching, setShowTeaching] = useState(true);
   const [activeJourney, setActiveJourney] = useState<string | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
-  const [atlasOpen, setAtlasOpen] = useState(false);
+  // Deep links (?atlas=instruments&seq=4&teach=1) open the Atlas on load —
+  // AtlasView itself reads the figure/seq/teach params.
+  const [atlasOpen, setAtlasOpen] = useState(
+    () => new URLSearchParams(window.location.search).has('atlas'),
+  );
   const [duoOpen, setDuoOpen] = useState(false);
 
   // Keep the browser tab title in the active language.

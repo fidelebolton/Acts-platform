@@ -25,7 +25,12 @@ interface Props {
  */
 export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
   const { t, fmt, lang } = useT();
-  const [figureId, setFigureId] = useState<AtlasFigureId>('peter');
+  // Deep link (?atlas=<figureId>&seq=N&teach=1) — lets slides/QR codes
+  // open the atlas at an exact map moment (e.g. a PowerPoint "View map"
+  // link per sermon movement). Parsed once on mount.
+  const [deepLink] = useState(parseAtlasDeepLink);
+  const deepLinkApplied = useRef(false);
+  const [figureId, setFigureId] = useState<AtlasFigureId>(deepLink?.fig ?? 'peter');
   const [activeSeq, setActiveSeq] = useState<number | null>(null);
   // Teach mode — projection-friendly: big caption card, arrow-key
   // stepping, story sidebar hidden so the map fills the screen.
@@ -140,6 +145,22 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
   };
   const flyToEventRef = useRef(flyToEvent);
   useEffect(() => { flyToEventRef.current = flyToEvent; });
+
+  // Apply the deep link once the map is ready: select the event (before
+  // teach mode flips on, so the "start at the birth" effect stands down),
+  // then fly in after the initial fitBounds settles.
+  useEffect(() => {
+    if (!open || !mapReady || !deepLink || deepLinkApplied.current) return;
+    deepLinkApplied.current = true;
+    const ev = figureRef.current.events.find(e => e.seq === deepLink.seq);
+    if (ev) setActiveSeq(ev.seq);
+    if (deepLink.teach) setPresenting(true);
+    const timer = window.setTimeout(() => {
+      const target = figureRef.current.events.find(e => e.seq === deepLink.seq);
+      if (target) flyToEventRef.current(target);
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [open, mapReady, deepLink]);
 
   // Create the map when the atlas opens; tear it down when it closes.
   useEffect(() => {
@@ -532,6 +553,19 @@ export function AtlasView({ open, onClose, onOpenVerse, onOpenDuo }: Props) {
       </div>
     </div>
   );
+}
+
+/** Parse ?atlas=<figureId>&seq=N&teach=1 from the URL (invalid → null). */
+function parseAtlasDeepLink(): { fig: AtlasFigureId; seq: number; teach: boolean } | null {
+  const params = new URLSearchParams(window.location.search);
+  const figParam = params.get('atlas');
+  if (!figParam) return null;
+  const figure = ATLAS_FIGURES.find(f => f.id === figParam);
+  if (!figure) return null;
+  const rawSeq = parseInt(params.get('seq') || '1', 10);
+  const seq = Math.min(Math.max(Number.isFinite(rawSeq) ? rawSeq : 1, 1), figure.events.length);
+  const teach = params.get('teach') === '1' || params.get('teach') === 'true';
+  return { fig: figure.id, seq, teach };
 }
 
 function glyphFor(k: AtlasEvent['kind']) {
